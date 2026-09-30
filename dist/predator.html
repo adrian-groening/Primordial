@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Primordial — Evolution lab</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header>
+      <a class="brand" href="./">EVOLUTION <small>SIMULATION LAB</small></a
+      ><span class="edition">EXPERIMENT 001 <b>LOCAL SIMULATION</b></span>
+    </header>
+    <main>
+      <section class="world">
+        <div class="world-heading">
+          <div>
+            <span class="eyebrow">EXPERIMENT 001</span>
+            <h1>Predator–prey dynamics</h1>
+          </div>
+          <div class="day">Elapsed time <strong id="time">0 s</strong></div>
+        </div>
+        <canvas
+          id="world"
+          tabindex="0"
+          aria-label="Live ecosystem. Click an organism to inspect it, or use Inspect organism below."
+        ></canvas>
+        <div class="world-footer">
+          <span
+            ><i class="mint"></i> Prey <i class="hunter"></i> Predators
+            <i class="gold"></i> Food</span
+          ><span>Body: size · Tail: speed · Feelers: sensing · Color and marks: inherited</span>
+        </div>
+        <div class="transport camera-controls">
+          <button id="fit-world" class="quiet">Fit world</button>
+          <button id="follow-selected" class="quiet">Follow selected</button>
+          <span>Drag to pan · Scroll to zoom</span>
+        </div>
+        <div class="transport playback-controls">
+          <button id="pause">Pause</button>
+          <div class="speeds" aria-label="Simulation speed">
+            <button data-speed="1" class="active">1×</button
+            ><button data-speed="3">3×</button
+            ><button data-speed="8">8×</button>
+          </div>
+          <button id="reset" class="quiet">Restart</button
+          ><button id="skyfall" class="quiet">☄ Skyfall</button
+          ><span id="status">Ecosystem running</span>
+        </div>
+        <p id="impact-status" class="note" role="status">A sudden impact can reshape the ecosystem.</p>
+        <section class="brain-panel">
+          <div class="section-title">
+            <h2>Neural activity</h2>
+            <label class="network-picker" for="network-view"
+              >Network
+              <select id="network-view" aria-label="Network to inspect">
+                <option value="0">1</option>
+              </select></label
+            >
+          </div>
+          <p id="brain-caption" class="note">
+            Select an organism. Enable neural networks to inspect its
+            controller.
+          </p>
+          <canvas
+            id="brain"
+            role="img"
+            aria-label="Selected organism neural network activation diagram"
+          ></canvas>
+          <p class="note">
+            Inputs → hidden layers → outputs · Blue: positive · Orange: negative
+            · Node brightness: activation magnitude · Lines: inherited weights
+          </p>
+          <div id="brain-readings" class="brain-readings"></div>
+        </section>
+      </section>
+      <aside>
+        <section class="decision-lab">
+          <h2>Decision lab</h2>
+          <p class="note">Compare two 10-second futures from this exact moment: current food arrival and one changed setting.</p>
+          <button id="compare-food">Compare futures</button>
+          <p id="decision-progress" class="note"></p>
+          <div id="decision-result" aria-live="polite"></div>
+          <div class="decision-actions">
+            <button id="apply-trial" hidden>Apply tested food level</button>
+            <button id="keep-current" class="quiet" hidden>Continue current run</button>
+          </div>
+        </section>
+        <section class="predator-settings world-settings">
+          <h2>World setup</h2>
+          <label for="world-width">Width (LU)</label>
+          <input id="world-width" type="number" min="250" max="4000" step="1" value="1000" />
+          <label for="world-height">Height (LU)</label>
+          <input id="world-height" type="number" min="250" max="4000" step="1" value="700" />
+          <label for="boundary">Boundary</label>
+          <select id="boundary"><option value="reflect">Reflecting</option><option value="periodic">Periodic</option></select>
+          <label for="fov">Field of view (degrees)</label>
+          <input id="fov" type="number" min="30" max="360" step="1" value="360" />
+          <label for="founder-prey">Founder prey</label>
+          <input id="founder-prey" type="number" min="0" max="350" step="1" value="80" />
+          <label for="founder-food">Initial food particles</label>
+          <input id="founder-food" type="number" min="0" max="650" step="1" value="230" />
+          <button id="apply-world">Apply world & restart</button>
+          <p id="world-error" class="note" role="status"></p>
+          <p class="note">World size, boundary and founder totals take effect on restart. Counts are absolute, so a larger world starts at lower density.</p>
+          <details>
+            <summary>Technical budgets</summary>
+            <label for="organism-budget">Organisms</label>
+            <input id="organism-budget" type="number" min="1" max="100000" step="1" value="350" />
+            <label for="food-budget">Food items</label>
+            <input id="food-budget" type="number" min="1" max="100000" step="1" value="650" />
+            <label for="carcass-budget">Carcasses</label>
+            <input id="carcass-budget" type="number" min="1" max="100000" step="1" value="350" />
+            <button id="raise-budget">Raise hit budget & resume</button>
+            <p class="note">A technical limit pauses the model before the rejected tick. Raising that store's budget resumes the same tick.</p>
+          </details>
+        </section>
+        <section>
+          <div class="section-title">
+            <h2>Population metrics</h2>
+            <span class="eyebrow">REAL TIME</span>
+          </div>
+          <div class="stats">
+            <div>
+              <strong id="population">64</strong><span>Population</span>
+            </div>
+            <div>
+              <strong id="generation">1</strong><span>Latest generation</span>
+            </div>
+          </div>
+          <div class="role-metrics">
+            <span>Prey <b id="prey-count">80</b></span
+            ><span>Predators <b id="predator-count">8</b></span
+            ><span>Predation deaths <b id="kill-count">0</b></span>
+          </div>
+          <canvas
+            id="history"
+            aria-label="Prey and predator counts by simulation time, up to 120 seconds"
+            role="img"
+          ></canvas>
+          <div class="chart-label">
+            <span>Prey / predator counts</span><span id="births">0 births</span>
+          </div>
+          <p id="ecology-note" class="note" aria-live="polite"></p>
+        </section>
+        <section class="predator-settings">
+          <h2>Predators</h2>
+          <label for="predators"
+            >Founder predators <output id="predators-value">8</output></label
+          >
+          <input
+            id="predators"
+            type="range"
+            min="0"
+            max="30"
+            step="1"
+            value="8"
+          />
+          <button id="apply-predators">Apply & restart</button>
+          <button id="inspect-predator">Inspect predator</button>
+          <label for="introduction-count">Introduce predators</label>
+          <input id="introduction-count" type="number" min="0" max="30" step="1" value="4" />
+          <label for="introduction-tick">At model tick</label>
+          <input id="introduction-tick" type="number" min="1" step="1" value="900" />
+          <button id="schedule-predators">Schedule introduction</button>
+          <p id="introduction-status" class="note" aria-live="polite"></p>
+          <p id="predator-status" class="note"></p>
+          <p class="note">
+            Orange triangles hunt green prey. Injured prey show a health bar;
+            square remains can be eaten by predators. Below 35% available
+            energy, predators may also hunt each other if prey runs out.
+            Set 0 for a predator-free comparison.
+          </p>
+        </section>
+        <section class="neural-settings">
+          <h2>Neural controller</h2>
+          <label for="networks"
+            >Networks per organism <output id="networks-value">0</output></label
+          ><input
+            id="networks"
+            type="range"
+            min="0"
+            max="4"
+            step="1"
+            value="0"
+          />
+          <label for="depth"
+            >Hidden layers <output id="depth-value">1</output></label
+          ><input id="depth" type="range" min="1" max="3" step="1" value="1" />
+          <label for="width"
+            >Neurons per hidden layer <output id="width-value">6</output></label
+          ><input id="width" type="range" min="2" max="12" step="1" value="6" />
+          <p id="architecture" class="note"></p>
+          <button id="apply-brain">Apply & restart experiment</button>
+          <p id="brain-status" class="note" aria-live="polite">
+            Active: rule-based foraging (0 networks).
+          </p>
+          <p class="note">
+            0 = rule-based hunting and escape. Neural networks receive a Goal turn
+            node and can influence turning, speed, attack, feeding, and reproduction;
+            visible food, threats, walls, and exploration goals guide movement.
+            Weights start random and evolve through inheritance and mutation,
+            not lifetime learning. Larger brains cost more energy and may perform worse.
+          </p>
+        </section>
+        <section>
+          <h2>Environmental pressures</h2>
+          <label for="food"
+            >External food arrival <output id="food-value">60%</output></label
+          ><input id="food" type="range" min="0" max="100" value="60" />
+          <div class="range-caption">
+            <span>Scarce</span><span>Abundant</span>
+          </div>
+          <label for="mutation"
+            >Mutation rate <output id="mutation-value">12%</output></label
+          ><input id="mutation" type="range" min="0" max="60" value="12" />
+          <div class="range-caption">
+            <span>Stable</span><span>Volatile</span>
+          </div>
+        </section>
+        <section class="inspector">
+          <div class="section-title">
+            <h2>Organism inspector</h2>
+            <button id="inspect" class="small">Inspect organism</button>
+          </div>
+          <div id="details">
+            <p>
+              No organism selected. Select one in the simulation to inspect its
+              traits.
+            </p>
+          </div>
+        </section>
+        <p class="note">
+          A simplified evolutionary sandbox. Faster movement and wider sensing
+          help find food, but cost more energy.
+        </p>
+      </aside>
+    </main>
+    <footer>
+      <span>MODEL / PREDATOR-V2</span
+      ><span>Inheritance · Mutation · Selection</span
+      ><span>2D / AGENT-BASED</span>
+    </footer>
+    <script type="module" src="predator-app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,72 @@
+{
+  "model": "legacy-v1",
+  "node": "v23.11.0",
+  "v8": "12.9.202.28-node.14",
+  "platform": "darwin",
+  "arch": "x64",
+  "cpu": "Apple M3 Pro",
+  "seed": 90210,
+  "ticks": 1800,
+  "dt": 0.03333333333333333,
+  "includesInitialization": false,
+  "description": "Headless 60 simulated seconds per repeat, three repeats after a 300-step disposable warm-up. Does not measure browser rendering, workers, sustained long-run load, or peak memory.",
+  "results": [
+    {
+      "neural": {
+        "count": 0,
+        "depth": 1,
+        "width": 6
+      },
+      "samplesMs": [
+        42.616749999999996,
+        32.66541599999999,
+        31.910374999999988
+      ],
+      "medianMs": 32.66541599999999,
+      "stepsPerSecond": 55104.15051808923,
+      "final": {
+        "population": 166,
+        "births": 129,
+        "food": 10
+      }
+    },
+    {
+      "neural": {
+        "count": 1,
+        "depth": 1,
+        "width": 6
+      },
+      "samplesMs": [
+        218.57258299999995,
+        175.5300000000001,
+        176.13254099999995
+      ],
+      "medianMs": 176.13254099999995,
+      "stepsPerSecond": 10219.576631214333,
+      "final": {
+        "population": 194,
+        "births": 139,
+        "food": 229
+      }
+    },
+    {
+      "neural": {
+        "count": 4,
+        "depth": 3,
+        "width": 12
+      },
+      "samplesMs": [
+        503.7350409999999,
+        481.689791,
+        478.57162500000027
+      ],
+      "medianMs": 481.689791,
+      "stepsPerSecond": 3736.8448192832884,
+      "final": {
+        "population": 174,
+        "births": 122,
+        "food": 167
+      }
+    }
+  ]
+}

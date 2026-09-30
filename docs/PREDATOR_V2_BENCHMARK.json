@@ -1,0 +1,52 @@
+{
+  "modelVersion": "predator-v2",
+  "node": "v23.11.0",
+  "platform": "darwin",
+  "arch": "x64",
+  "cpu": "Apple M3 Pro",
+  "workload": "300 model ticks, 80 prey, 8 predators, 230 starting food items; no browser rendering",
+  "scenarios": [
+    {
+      "name": "rule-uniform",
+      "seed": 90210,
+      "ticks": 300,
+      "population": 80,
+      "food": 125,
+      "elapsedMs": 215.33158299999997,
+      "medianTickMs": 0.2927920000000199,
+      "p95TickMs": 2.9465409999999963,
+      "ticksPerSecond": 1393.200179093097,
+      "heapUsedBytes": 7691192,
+      "energyResidual": -2.024080458795652e-9,
+      "technicalLimit": null
+    },
+    {
+      "name": "one-network-uniform",
+      "seed": 90210,
+      "ticks": 300,
+      "population": 82,
+      "food": 184,
+      "elapsedMs": 127.92349999999999,
+      "medianTickMs": 0.225291000000027,
+      "p95TickMs": 1.3781660000000215,
+      "ticksPerSecond": 2345.151594507655,
+      "heapUsedBytes": 14575512,
+      "energyResidual": -2.376964403083548e-9,
+      "technicalLimit": null
+    },
+    {
+      "name": "rule-dense",
+      "seed": 90210,
+      "ticks": 300,
+      "population": 80,
+      "food": 271,
+      "elapsedMs": 93.64233300000001,
+      "medianTickMs": 0.20724999999998772,
+      "p95TickMs": 0.8029999999999973,
+      "ticksPerSecond": 3203.679259037683,
+      "heapUsedBytes": 15467064,
+      "energyResidual": -1.4551915228366852e-10,
+      "technicalLimit": null
+    }
+  ]
+}

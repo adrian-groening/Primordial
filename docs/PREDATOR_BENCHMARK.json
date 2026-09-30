@@ -1,0 +1,37 @@
+{
+  "model": "predator-v1",
+  "node": "v23.11.0",
+  "cpu": "Apple M3 Pro",
+  "seed": 90210,
+  "initialPrey": 80,
+  "initialPredators": 8,
+  "simulatedSeconds": 60,
+  "ticks": 1800,
+  "description": "Single headless samples excluding initialization. Not browser FPS, a steady-state benchmark, or a performance guarantee.",
+  "results": [
+    {
+      "neural": {
+        "count": 0,
+        "depth": 1,
+        "width": 6
+      },
+      "elapsedMs": 382.588667,
+      "population": 91,
+      "kills": 137,
+      "births": 170,
+      "energyResidual": -2.557499101385474e-9
+    },
+    {
+      "neural": {
+        "count": 4,
+        "depth": 3,
+        "width": 12
+      },
+      "elapsedMs": 675.6034579999999,
+      "population": 136,
+      "kills": 16,
+      "births": 87,
+      "energyResidual": 9.094947017729282e-11
+    }
+  ]
+}

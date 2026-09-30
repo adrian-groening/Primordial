@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "modelVersion": "legacy-v1",
+  "seed": 90210,
+  "mode": "rule",
+  "world": { "width": 1000, "height": 700 },
+  "initial": { "organisms": 64, "food": 230 },
+  "neural": { "count": 0, "depth": 1, "width": 6 },
+  "renewal": 60,
+  "mutation": 12
+}

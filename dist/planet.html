@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Evolution — Planet laboratory</title>
+    <link rel="stylesheet" href="planet.css" />
+  </head>
+  <body>
+    <header>
+      <div class="brand">EVOLUTION <span>PLANET LABORATORY</span></div>
+      <div class="header-meta">
+        SPHERICAL HABITAT <span id="model-state">LOCAL SIMULATION</span>
+      </div>
+    </header>
+    <main class="planet-shell">
+      <section class="viewport" id="viewport">
+        <div class="view-label">
+          <span>SPATIAL DOMAIN / 01</span>
+          <h1>Spherical coordinate field</h1>
+          <p>Drag to rotate · Scroll to zoom · Select an animal</p>
+        </div>
+        <canvas
+          id="world"
+          tabindex="0"
+          aria-label="Rotatable 3D planet. Drag to rotate, scroll or use plus/minus to zoom. Arrow keys rotate. Use Next animal and Focus selected for keyboard inspection."
+        ></canvas>
+        <div id="render-error" hidden></div>
+        <div class="view-controls">
+          <button id="overview">Field overview</button
+          ><button id="focus">Focus selected</button
+          ><button id="zoom-in" aria-label="Zoom in">+</button
+          ><button id="zoom-out" aria-label="Zoom out">−</button
+          ><button id="expand">Expand view</button>
+        </div>
+        <div class="world-caption">
+          <span>Origin (0, 0, 0) · Radius 900 u · Grid 15°</span
+          ><span
+            >Crosses: habitat · Arrow: heading · Ring: selected territory</span
+          >
+        </div>
+        <div class="transport">
+          <button id="pause" class="primary">Pause</button>
+          <div class="speed-group">
+            <button data-speed="1" class="active" aria-pressed="true">1×</button
+            ><button data-speed="3" aria-pressed="false">3×</button
+            ><button data-speed="8" aria-pressed="false">8×</button>
+          </div>
+          <button id="reset">Restart</button><span id="time">0 s</span
+          ><span id="status">Running</span>
+        </div>
+        <div class="metrics">
+          <div><span>Living</span><strong id="population">2</strong></div>
+          <div><span>Grazers</span><strong id="prey-count">2</strong></div>
+          <div><span>Hunters</span><strong id="predator-count">0</strong></div>
+          <div><span>Births</span><strong id="births">0</strong></div>
+          <div><span>Incubating</span><strong id="egg-count">0</strong></div>
+          <div><span>Generation</span><strong id="generation">1</strong></div>
+          <div><span>New variants</span><strong id="variants">0</strong></div>
+        </div>
+      </section>
+      <aside>
+        <nav class="tabs" role="tablist" aria-label="Laboratory panels">
+          <button
+            id="tab-organism"
+            role="tab"
+            data-panel="organism"
+            aria-selected="true"
+            aria-controls="panel-organism"
+            class="active"
+          >
+            Organism</button
+          ><button
+            id="tab-environment"
+            role="tab"
+            data-panel="environment"
+            aria-selected="false"
+            aria-controls="panel-environment"
+          >
+            Environment</button
+          ><button
+            id="tab-neural"
+            role="tab"
+            data-panel="neural"
+            aria-selected="false"
+            aria-controls="panel-neural"
+          >
+            Neural
+          </button>
+        </nav>
+        <div id="panel-organism" role="tabpanel" aria-labelledby="tab-organism">
+          <div class="section-head">
+            <h2>Individual & family</h2>
+            <button id="inspect">Next animal</button>
+          </div>
+          <button id="inspect-predator" class="wide">Select a hunter</button>
+          <div id="details"></div>
+          <h2>Inherited DNA</h2>
+          <div id="dna"></div>
+          <p class="note">
+            Pigment → body color · Speed → cilia length · Armor → plates ·
+            Pattern → markings · Oxygen tolerance → respiratory folds.
+          </p>
+          <h2>Family tree</h2>
+          <div id="family-content"></div>
+          <h2>Lineage comparison</h2>
+          <div id="lineage-comparison"></div>
+          <h2>Population history</h2>
+          <canvas
+            id="history"
+            role="img"
+            aria-label="Grazer and hunter population by simulation time"
+          ></canvas>
+          <div class="legend">
+            <span class="grazer">Grazers</span
+            ><span class="hunter">Hunters</span>
+          </div>
+          <p id="ecology-note" class="note"></p>
+        </div>
+        <div
+          id="panel-environment"
+          role="tabpanel"
+          aria-labelledby="tab-environment"
+          hidden
+        >
+          <h2>Atmosphere</h2>
+          <label for="oxygen"
+            >Oxygen <output id="oxygen-value">21%</output></label
+          ><input
+            id="oxygen"
+            type="range"
+            min="0"
+            max="60"
+            step="1"
+            value="21"
+          />
+          <p id="oxygen-summary" class="note"></p>
+          <p class="note">
+            Both low and high oxygen can damage animals outside their inherited
+            tolerance. Selection changes descendants; adults do not rewrite
+            their DNA.
+          </p>
+          <label for="temperature"
+            >Temperature <output id="temperature-value">24°C</output></label
+          ><input id="temperature" type="range" min="-10" max="50" value="24" />
+          <h2>Terrain</h2>
+          <label for="seaLevel"
+            >Sea level <output id="seaLevel-value">38%</output></label
+          ><input
+            id="seaLevel"
+            type="range"
+            min="5"
+            max="75"
+            value="38"
+          /><label for="ruggedness"
+            >Ruggedness <output id="ruggedness-value">55%</output></label
+          ><input
+            id="ruggedness"
+            type="range"
+            min="0"
+            max="100"
+            value="55"
+          /><label for="fertility"
+            >Fertility <output id="fertility-value">70%</output></label
+          ><input id="fertility" type="range" min="0" max="100" value="70" />
+          <p class="note">
+            Water changes traversable habitat. Rugged terrain slows movement;
+            vegetation provides cover and fertility changes food production.
+          </p>
+          <label for="food"
+            >Food renewal <output id="food-value">60%</output></label
+          ><input id="food" type="range" min="0" max="100" value="60" /><label
+            for="mutation"
+            >Mutation probability
+            <output id="mutation-value">12%</output></label
+          ><input id="mutation" type="range" min="0" max="60" value="12" />
+          <h2>New experiment</h2>
+          <p class="note">
+            Begin with two genetically identical asexual founders. Compare their
+            descendants as mutations and local conditions shape each lineage.
+          </p>
+          <button id="restart-ancestor" class="wide">
+            Restart with two founders
+          </button>
+          <p id="predator-status" class="note"></p>
+          <p class="note">
+            Environment controls act immediately. Restart applies the current
+            atmosphere and terrain to a new population. Brain dimensions require
+            a restart.
+          </p>
+        </div>
+        <div
+          id="panel-neural"
+          role="tabpanel"
+          aria-labelledby="tab-neural"
+          hidden
+        >
+          <h2>Neural inheritance</h2>
+          <label for="networks"
+            >Networks per animal <output id="networks-value">0</output></label
+          ><input id="networks" type="range" min="0" max="4" value="0" /><label
+            for="depth"
+            >Hidden layers <output id="depth-value">1</output></label
+          ><input id="depth" type="range" min="1" max="3" value="1" /><label
+            for="width"
+            >Neurons per layer <output id="width-value">6</output></label
+          ><input id="width" type="range" min="2" max="12" value="6" />
+          <p id="architecture" class="note"></p>
+          <button id="apply-brain" class="wide">Apply brains & restart</button>
+          <p id="brain-status" class="note"></p>
+          <p class="note">
+            0 uses foraging, escape, and budding rules. Neural outputs control
+            turning, movement, predatory attacks, and willingness to bud. Mate
+            inputs remain zero in this asexual experiment. Territorial defense
+            uses inherited aggression independently of the neural attack output.
+            Offspring inherit whole network modules from either parent, then
+            mutate.
+          </p>
+          <label for="network-view"
+            >Inspect network
+            <select id="network-view">
+              <option value="0">1</option>
+            </select></label
+          >
+          <p id="brain-caption" class="note"></p>
+          <canvas
+            id="brain"
+            role="img"
+            aria-label="Selected animal neural activity: inputs, hidden layers, outputs"
+          ></canvas>
+          <p id="brain-readings" class="note"></p>
+        </div>
+      </aside>
+    </main>
+    <footer>
+      PLANET-V1 · Artificial life with inherited traits. Variants are trait
+      combinations, not scientifically established new species.
+      <a href="predator.html">Previous 2D model</a>
+    </footer>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
