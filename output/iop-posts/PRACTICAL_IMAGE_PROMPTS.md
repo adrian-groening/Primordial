@@ -1,0 +1,11 @@
+# Practical IOP post image prompts
+
+Generated with the built-in image-generation tool on 26 October 2026. Both images use a 3:2 landscape layout.
+
+## codex-feedback-workflow.png
+
+Create a sophisticated editorial illustration for an Industrial and Organisational Psychology student community post: using an AI coding assistant to automate training feedback reporting. Landscape 3:2, all important content centrally composed with generous margins, readable at feed-card size. Warm ivory background, deep forest green, teal and restrained copper accents matching a professional academic community website. Show a neat left-to-right desktop workflow of a small spreadsheet with simple abstract cells, a compact code window with abstract short lines, and a clean report with an understated bar chart, linked by elegant arrows. Include a student's hands lightly checking a printed tally beside the report to convey human verification. Refined tactile paper-cut / editorial 3D hybrid, clean and approachable, realistic professional study environment, no robots, no brain icons, no neon, no visual clutter. No legible text, no numbers, no brand logos, no watermark. This is a conceptual illustration, not an actual software screenshot; chart is decorative, not factual data.
+
+## codex-interview-practice.png
+
+Create a polished editorial illustration for an Industrial and Organisational Psychology student community post about using Codex, an AI coding assistant, to build a structured-interview practice tool. Landscape 3:2 feed image, all key subjects within central 70 percent, ample margins for crop safety. Warm ivory backdrop, deep forest green and teal with restrained copper accents; match a professional academic community website. Show a laptop with a clear simple interface: two fictional candidate-response cards side by side and three empty rating circles below each, plus a small code panel peeking behind it. Two student hands independently marking separate paper rubrics in foreground, suggesting comparison of human judgements. Sophisticated paper-cut / editorial 3D style, approachable professional academic setting. No real faces or personal data, no legible words or numbers, no logos, no robots, no watermark, no ranking podium or winner. Conceptual illustration rather than a real product screenshot.

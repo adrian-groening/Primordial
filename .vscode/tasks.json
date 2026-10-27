@@ -4,19 +4,16 @@
     {
       "label": "Evolution: start local simulation",
       "type": "shell",
-      "command": "python3",
+      "command": "node",
       "args": [
-        "-m",
-        "http.server",
-        "4173",
-        "--bind",
-        "127.0.0.1",
-        "--directory",
-        "dist"
+        "scripts/local-server.mjs"
       ],
       "isBackground": true,
       "problemMatcher": [],
-      "presentation": { "reveal": "silent", "panel": "dedicated" }
+      "presentation": {
+        "reveal": "silent",
+        "panel": "dedicated"
+      }
     }
   ]
 }

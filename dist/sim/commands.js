@@ -8,7 +8,7 @@ export function makeCommand(currentTick, sequence, command) {
     ? numberInRange(command.value, "renewal", 0, 100)
     : command.type === "mutation"
       ? validateMutation(command.value)
-      : numberInRange(command.value, "introduced predators", 0, 30, true);
+      : numberInRange(command.value, "introduced predators", 0, 100000, true);
   return { tick, sequence, type: command.type, value };
 }
 

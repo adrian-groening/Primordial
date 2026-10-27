@@ -6,10 +6,16 @@ export function bodyRadius(organism) {
   return organism.size * (organism.role === "predator" ? 1.7 : 1.45);
 }
 
+function nearbyBodies(organisms, point, reach) {
+  return typeof organisms.query === "function"
+    ? organisms.query(point.x, point.y, reach + organisms.maxBodyRadius + 0.01)
+    : organisms;
+}
+
 export function hasBodySpace(point, radius, organisms, obstacles, width, height, periodic, exceptId = null) {
   if (!periodic && (point.x - radius < 0 || point.y - radius < 0 ||
       point.x + radius > width || point.y + radius > height)) return false;
-  for (const other of organisms) {
+  for (const other of nearbyBodies(organisms, point, radius)) {
     if (other.dead || other.id === exceptId) continue;
     const d = displacement(point, other, width, height, periodic).squared;
     if (d < (radius + bodyRadius(other) + 0.01) ** 2) return false;
@@ -44,7 +50,8 @@ export function firstBodyHit(start, end, mover, organisms, width, height, period
   const xs = periodic ? [-width, 0, width] : [0];
   const ys = periodic ? [-height, 0, height] : [0];
   let first = null, blockerId = Infinity;
-  for (const other of organisms) {
+  const reach = bodyRadius(mover) + Math.hypot(end.x - start.x, end.y - start.y);
+  for (const other of nearbyBodies(organisms, start, reach)) {
     if (other.dead || other.id === mover.id) continue;
     for (const ox of xs) for (const oy of ys) {
       const hit = segmentCircleHit(start, end,

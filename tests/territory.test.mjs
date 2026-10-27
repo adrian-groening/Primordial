@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { PlanetWorld } from "../dist/sim/planet-world.js";
 import {
   bodyRadius,
+  effectiveRadius,
   territoryRadius,
   movementBlockers,
   hasSpace,
@@ -14,7 +15,7 @@ function separated(w) {
       const a = w.organisms[i],
         b = w.organisms[j];
       assert(
-        distance(a.n, b.n) >= bodyRadius(a) + bodyRadius(b) - 1e-5,
+        distance(a.n, b.n) >= effectiveRadius(a) + effectiveRadius(b) - 1e-5,
         `${a.id} overlaps ${b.id}`,
       );
     }

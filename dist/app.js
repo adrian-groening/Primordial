@@ -4,9 +4,10 @@ import { bodyRadius, territoryRadius } from "./sim/space.js";
 import { RADIUS } from "./sim/sphere.js";
 import { GENES } from "./sim/genetics.js";
 import { drawBrain } from "./brain-view.js";
+import { DialogueManager } from "./dialogue.js";
 import { PlanetView } from "./render/planet-view.js";
 const $ = (id) => document.getElementById(id);
-let sim = new PlanetWorld(),
+let sim = new PlanetWorld(90210, { count: 1, depth: 1, width: 6 }),
   selected = sim.organisms[0].id,
   paused = matchMedia("(prefers-reduced-motion: reduce)").matches,
   speed = 1,
@@ -24,6 +25,48 @@ try {
     "The 3D view requires WebGL2. Enable graphics acceleration in VS Code, or use the previous 2D model linked below. " +
     error.message;
 }
+const escapeHTML = (value) =>
+  String(value).replace(
+    /[&<>"']/g,
+    (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
+        c
+      ],
+  );
+const dialogue = new DialogueManager(fetch, renderDialogue);
+function renderDialogue() {
+  $("conversation-status").textContent = dialogue.status;
+  $("auto-conversations").checked = dialogue.enabled;
+  $("conversation-log").innerHTML = dialogue.lines.length
+    ? dialogue.lines
+        .slice(-12)
+        .map(
+          (x) =>
+            `<p class="conversation-line"><span>${escapeHTML(x.family)} #${x.speakerId}</span> “${escapeHTML(x.line)}”</p>`,
+        )
+        .join("")
+    : '<p class="note">No conversation yet. Organisms speak when they meet, or you can invite the selected one to talk.</p>';
+}
+dialogue.attach(sim);
+dialogue.check();
+$("auto-conversations").onchange = () => {
+  dialogue.enabled = $("auto-conversations").checked;
+  renderDialogue();
+};
+$("invite-conversation").onclick = () => {
+  const actor = current(),
+    partner = dialogue.nearestPartner(sim, actor);
+  if (!partner) {
+    dialogue.status = "No other organism is within speaking range.";
+    renderDialogue();
+    return;
+  }
+  if (!dialogue.available) {
+    dialogue.check();
+    return;
+  }
+  dialogue.converse(sim, actor, partner, true);
+};
 function resize() {
   view?.resize();
   for (const id of ["history", "brain"]) {
@@ -74,6 +117,16 @@ function inspector() {
       ) +
       trait("Life stage", sim.mature(o) ? "Adult" : "Juvenile") +
       trait("Behavior", o.action) +
+      trait("Current drive", o.mind.reason) +
+      trait(
+        "Fear / fatigue",
+        `${(o.mind.fear * 100).toFixed(0)}% / ${(o.mind.fatigue * 100).toFixed(0)}%`,
+      ) +
+      trait("Exploratory deviations", String(o.mind.deviations)) +
+      trait(
+        "Last encounter",
+        o.mind.lastEncounterId ? `#${o.mind.lastEncounterId}` : "None",
+      ) +
       trait("Body clearance radius", bodyRadius(o).toFixed(1) + " u") +
       trait("Territory radius", territoryRadius(o).toFixed(1) + " u") +
       trait("Age", o.age.toFixed(1) + " s") +
@@ -190,7 +243,7 @@ function renderUI() {
       : "Extinct";
   $("ecology-note").textContent = sim.limitReached
     ? "Birth capacity reached; this run is capacity-limited."
-    : `${sim.collisions} blocked movements · ${sim.conflicts} defensive strikes · ${sim.deaths.conflict} conflict deaths · ${sim.kills} predation deaths · ${sim.deaths.oxygen} oxygen deaths · ${sim.deaths.starvation} starvation deaths`;
+    : `${sim.collisions} blocked movements · ${sim.encounters} kin signals · ${sim.conflicts} defensive strikes · ${sim.deaths.conflict} conflict deaths · ${sim.kills} predation deaths · ${sim.deaths.oxygen} oxygen deaths · ${sim.deaths.starvation} starvation deaths`;
   const mean = sim.organisms.length
     ? sim.organisms.reduce((n, o) => n + o.traits.oxygen, 0) /
       sim.organisms.length
@@ -230,10 +283,12 @@ function architectureUI() {
   $("depth").disabled = $("width").disabled = n.count === 0;
 }
 function restart(neural = sim.neural) {
+  if (neural.count < 1) neural = { ...neural, count: 1 };
   const env = { ...sim.environment },
     renewal = sim.renewal,
     mutation = sim.mutation;
   sim = new PlanetWorld(90210, neural, 2, env);
+  dialogue.attach(sim);
   sim.renewal = renewal;
   sim.mutation = mutation;
   selected = sim.organisms[0]?.id ?? null;
@@ -328,6 +383,7 @@ function frame(t) {
   const dt = last ? Math.min((t - last) / 1000, 0.06) : 0;
   last = t;
   if (!paused && dt > 0) sim.step(dt * speed);
+  dialogue.poll(sim);
   view?.render(sim, selected);
   if (t - lastUI > 250) {
     renderUI();

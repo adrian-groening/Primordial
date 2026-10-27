@@ -37,10 +37,18 @@ import {
 } from "./genetics.js";
 import {
   bodyRadius,
+  effectiveRadius,
+  hasSpace,
   territoryRadius,
   freePosition,
   movementBlockers,
 } from "./space.js";
+import {
+  newMind,
+  rememberDanger,
+  updateMind,
+  chooseBehavior,
+} from "./behavior.js";
 import { habitat, elevation } from "./terrain.js";
 export const DT = 1 / 30;
 const FAMILY_NAMES = [
@@ -68,10 +76,11 @@ export class PlanetWorld {
     numberInRange(founders, "ancestral copies", 1, 80, true);
     this.neural = Object.freeze(validateNeuralConfig(neural));
     this.parameters = parameterCount(this.neural);
-    this.modelVersion = "planet-v3";
+    this.modelVersion = "planet-v4";
     this.reproductionMode = "asexual";
     this.collisions = 0;
     this.conflicts = 0;
+    this.encounters = 0;
     this.seed = seed;
     this.brainSeed = (seed + 12345) >>> 0;
     this.nextId = 1;
@@ -234,6 +243,8 @@ export class PlanetWorld {
       n: [...n],
       territoryCenter: [...n],
       defenseAfter: 0,
+      compression: 0,
+      lastBumpTick: -1000,
       heading: add(scale(east, Math.cos(angle)), scale(north, Math.sin(angle))),
       familyId,
       ancestry: [familyId],
@@ -250,6 +261,8 @@ export class PlanetWorld {
       mateAfter: 0,
       dead: false,
       action: "exploring",
+      mind: newMind(),
+      decision: null,
       control: [0, 1, hunter ? 1 : -1, 1],
       traces: [],
       brains:
@@ -352,6 +365,10 @@ export class PlanetWorld {
         ? [...prey, ...this.carcasses.filter((x) => x.role === "prey")]
         : this.food;
     const food = this.nearest(o, edible),
+      neighbor = this.nearest(
+        o,
+        this.organisms.filter((x) => x.id !== o.id && !x.dead),
+      ),
       threat = hunter
         ? null
         : this.nearest(
@@ -379,6 +396,7 @@ export class PlanetWorld {
       food,
       threat,
       mate,
+      neighbor,
       inputs: [
         ...local(food),
         ...local(threat),
@@ -392,40 +410,35 @@ export class PlanetWorld {
     };
   }
   control(o, s) {
+    let output = null;
     if (o.brains.length) {
       const result = decide(o.brains, s.inputs);
-      o.control = result.output;
+      output = result.output;
       o.traces = result.traces;
-      o.action = "neural behavior";
-      return;
     }
-    let target = s.threat ?? s.mate ?? s.food,
-      dir;
-    if (target) {
-      dir = tangent(o.n, target.n);
-      if (s.threat) {
-        dir = scale(dir, -1);
-        o.action = "fleeing";
-      } else if (s.mate) o.action = "seeking mate";
-      else o.action = o.role === "predator" ? "hunting" : "foraging";
-    } else {
-      const a = (this.random() - 0.5) * 1.4;
-      dir = add(
-        scale(o.heading, Math.cos(a)),
-        scale(cross(o.n, o.heading), Math.sin(a)),
-      );
-      o.action = "exploring";
+    o.decision = chooseBehavior(o, s, this, output);
+    const neighbor = s.neighbor;
+    if (
+      neighbor &&
+      neighbor.familyId === o.familyId &&
+      distance(o.n, neighbor.n) < 110 &&
+      this.tick >= o.mind.signalAfter &&
+      o.energy > 10 &&
+      o.mind.intent === "approaching"
+    ) {
+      this.spend(o, 0.1);
+      o.mind.signalAfter = this.tick + 180;
+      o.mind.lastEncounterId = neighbor.id;
+      this.encounters++;
+      this.events.push({
+        type: "signal",
+        actorId: o.id,
+        receiverId: neighbor.id,
+        a: [...o.n],
+        b: [...neighbor.n],
+        until: this.tick + 20,
+      });
     }
-    const angle = Math.atan2(
-      dot(dir, cross(o.n, o.heading)),
-      dot(dir, o.heading),
-    );
-    o.control = [
-      clamp(angle / 0.6, -1, 1),
-      1,
-      o.role === "predator" ? 1 : -1,
-      1,
-    ];
   }
   spend(o, amount) {
     const v = Math.min(o.energy, Math.max(0, amount));
@@ -477,8 +490,11 @@ export class PlanetWorld {
         (damage.get(prey.id) || 0) + (24 - prey.traits.armor * 14),
       );
       a.action = "attacking";
+      rememberDanger(prey, a, this.tick, 0.95);
       this.events.push({
         type: "attack",
+        actorId: a.id,
+        receiverId: prey.id,
         a: [...a.n],
         b: [...prey.n],
         until: this.tick + 8,
@@ -507,7 +523,14 @@ export class PlanetWorld {
         if (intruder.age < 18 && intruder.parents.includes(defender.id))
           continue;
         defender.defenseAfter = this.tick + 30;
-        if (this.random() >= defender.traits.aggression) continue;
+        const deliberate =
+          !defender.decision ||
+          (defender.mind.hostileTo === intruder.id &&
+            defender.mind.intent === "challenging");
+        if (!deliberate || defender.health < 45 || defender.energy < 20)
+          continue;
+        const kinModifier = defender.familyId === intruder.familyId ? 0.2 : 1;
+        if (this.random() >= defender.traits.aggression * kinModifier) continue;
         this.spend(defender, 2);
         damage.set(
           intruder.id,
@@ -515,9 +538,12 @@ export class PlanetWorld {
             10 * (1 - intruder.traits.armor * 0.6),
         );
         defender.action = "defending territory";
+        rememberDanger(intruder, defender, this.tick, 0.7);
         this.conflicts++;
         this.events.push({
           type: "conflict",
+          actorId: defender.id,
+          receiverId: intruder.id,
           a: [...defender.n],
           b: [...intruder.n],
           until: this.tick + 15,
@@ -716,8 +742,12 @@ export class PlanetWorld {
       const cause = causes.reduce((a, b) => (b[1] > a[1] ? b : a))[0];
       const damage = stress * 0.7 + tempStress * 0.3 + waterStress;
       o.health -= damage * DT;
-      if (damage === 0 && o.energy > 40)
-        o.health = Math.min(100, o.health + 0.12 * DT);
+      if (damage === 0 && o.energy > 40) {
+        const rest = o.mind.intent === "resting" && o.health < 100;
+        const repair = Math.min(100 - o.health, (rest ? 1.2 : 0.12) * DT);
+        if (rest && repair > 0) this.spend(o, repair * 0.6);
+        o.health += repair;
+      }
       if (o.health <= 0) this.die(o, cause);
       else if (o.energy <= 0) this.die(o, "starvation");
       else if (o.age >= (o.role === "prey" ? 300 : 360)) this.die(o, "age");
@@ -763,15 +793,98 @@ export class PlanetWorld {
       } else if (blockers.length) {
         this.collisions++;
         for (const other of blockers) {
+          if (other.familyId !== o.familyId)
+            rememberDanger(o, other, this.tick, 0.42);
           const pair = [o, other].sort((a, b) => a.id - b.id);
           contacts.set(pair.map((x) => x.id).join(":"), pair);
+          if (o.lastBumpTick + 30 <= this.tick) {
+            this.events.push({
+              type: "bump",
+              actorId: o.id,
+              receiverId: other.id,
+              a: [...o.n],
+              b: [...other.n],
+              until: this.tick + 20,
+            });
+            o.lastBumpTick = this.tick;
+          }
         }
-        o.heading = norm(cross(o.n, o.heading));
-        o.action = "yielding space";
+        let moved = false;
+        // Follow the edge of a body instead of making a fixed right-angle turn.
+        for (const turn of [0.45, -0.45, 0.95, -0.95, 1.5, -1.5]) {
+          const side = norm(
+            add(
+              scale(o.heading, Math.cos(turn)),
+              scale(cross(o.n, o.heading), Math.sin(turn)),
+            ),
+          );
+          const sidestep = walk(o.n, side, velocity * DT);
+          if (
+            !movementBlockers(o, sidestep, this.organisms).length &&
+            (env.water ||
+              o.traits.swim >= 0.65 ||
+              !habitat(sidestep, this.environment).water)
+          ) {
+            o.n = sidestep;
+            o.heading = tangent(o.n, side);
+            o.action = "sliding past";
+            moved = true;
+            break;
+          }
+        }
+        if (!moved) {
+          const oldCompression = o.compression;
+          o.compression = Math.max(o.compression, 0.18);
+          // Neighbors yield a little volume; hard cores still cannot coincide.
+          const prior = blockers.map((x) => x.compression);
+          blockers.forEach(
+            (x) => (x.compression = Math.max(x.compression, 0.18)),
+          );
+          if (!movementBlockers(o, candidate, this.organisms).length) {
+            o.n = candidate;
+            o.heading = tangent(o.n, o.heading);
+            o.action = "squeezing through";
+            moved = true;
+          } else {
+            o.compression = oldCompression;
+            blockers.forEach((x, i) => (x.compression = prior[i]));
+          }
+        }
+        if (!moved && blockers.length === 1) {
+          const other = blockers[0];
+          const pushDirection = tangent(other.n, add(other.n, scale(o.n, -1)));
+          const pushed = walk(
+            other.n,
+            pushDirection,
+            Math.max(0.25, velocity * DT + 0.2),
+          );
+          const obstacles = this.organisms.filter((x) => x.id !== o.id);
+          if (
+            (habitat(pushed, this.environment).water === false ||
+              other.traits.swim >= 0.65) &&
+            !movementBlockers(other, pushed, obstacles).length &&
+            hasSpace(pushed, effectiveRadius(other), obstacles, other.id)
+          ) {
+            const before = other.n;
+            other.n = pushed;
+            if (!movementBlockers(o, candidate, this.organisms).length) {
+              o.n = candidate;
+              o.heading = tangent(o.n, o.heading);
+              this.spend(o, 0.04);
+              o.action = "nudging past";
+              moved = true;
+            } else other.n = before;
+          }
+        }
+        if (!moved) {
+          o.heading = norm(cross(o.n, o.heading));
+          o.action = "yielding space";
+        }
       } else {
         o.n = candidate;
         o.heading = tangent(o.n, o.heading);
       }
+      updateMind(o, DT, velocity);
       this.spend(
         o,
         DT *
@@ -783,6 +896,10 @@ export class PlanetWorld {
             this.parameters * 0.000025),
       );
       if (o.energy <= 0) this.die(o, "starvation");
+    }
+    for (const o of this.organisms) {
+      if (o.dead || !o.compression) continue;
+      if (hasSpace(o.n, bodyRadius(o), this.organisms, o.id)) o.compression = 0;
     }
     this.resolveConflicts([...contacts.values()]);
     this.combat();

@@ -83,3 +83,24 @@ test("crowded births wait without charging energy or creating an overlap", () =>
   assert.equal(o.energy, before);
   separated(world);
 });
+
+test("moving-body broad phase preserves full-scan trajectories through births and periodic seams", () => {
+  class FullScanWorld extends PredatorWorld {
+    bodyGrid() {
+      const grid = super.bodyGrid();
+      grid.query = () => [...grid.cells.values()].flat();
+      return grid;
+    }
+  }
+  for (const boundary of ["reflect", "periodic"]) {
+    const settings = { boundary, prey: 50, food: 100 };
+    const fast = new PredatorWorld(90210, { count: 1, depth: 1, width: 6 }, 5, settings);
+    const reference = new FullScanWorld(90210, { count: 1, depth: 1, width: 6 }, 5, settings);
+    for (let tick = 0; tick < 600; tick++) {
+      fast.stepTick(); reference.stepTick();
+      if (tick % 30 === 0) assert.equal(fast.stateKey(), reference.stateKey(), `${boundary} tick ${tick + 1}`);
+    }
+    assert.equal(fast.stateKey(), reference.stateKey());
+    assert(fast.births > 0);
+  }
+});

@@ -152,7 +152,7 @@ test("inspection and render snapshots leave a nonempty neural world unchanged", 
 
 test("new 2D configuration rejects malformed bounds and unknown options", () => {
   for (const options of [
-    { width: 249 }, { height: 4001 }, { width: 500.5 },
+    { width: 249 }, { height: 100001 }, { width: 500.5 },
     { boundary: "teleport" }, { fovDegrees: 0 }, { prey: -1 },
     { budgets: { organisms: 0 } }, { budgets: { magic: 10 } },
     { nonexistent: true },

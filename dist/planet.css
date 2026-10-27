@@ -477,3 +477,46 @@ footer a {
   margin-bottom: 8px;
   background: #080b0e;
 }
+
+.conversation-panel {
+  margin: 22px 0;
+  padding: 13px;
+  border: 1px solid #283944;
+  background: #05090c;
+}
+.conversation-panel .section-head {
+  margin: 0 0 8px;
+}
+.conversation-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font:
+    11px ui-monospace,
+    monospace;
+  color: #9db3c0;
+}
+.conversation-toggle input {
+  accent-color: #8aafbd;
+}
+.conversation-log {
+  max-height: 230px;
+  min-height: 58px;
+  overflow: auto;
+  border-top: 1px solid #24323b;
+  margin-top: 12px;
+  padding-top: 6px;
+}
+.conversation-line {
+  margin: 8px 0;
+  line-height: 1.5;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.conversation-line span {
+  color: #9fc3d1;
+  font:
+    600 11px ui-monospace,
+    monospace;
+  margin-right: 6px;
+}

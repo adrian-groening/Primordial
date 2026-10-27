@@ -38,7 +38,7 @@ const report = {
   platform: process.platform,
   arch: process.arch,
   cpu: os.cpus()[0]?.model,
-  workload: "300 model ticks, 80 prey, 8 predators, 230 starting food items; no browser rendering",
+  workload: "300 model ticks, 1000 × 2000 world, 80 prey, 8 predators, 230 starting food items; no browser rendering",
   scenarios: [
     measure("rule-uniform", { count: 0, depth: 1, width: 6 }),
     measure("one-network-uniform", { count: 1, depth: 2, width: 12 }),

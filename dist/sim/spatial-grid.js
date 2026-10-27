@@ -8,6 +8,7 @@ export class SpatialGrid {
     this.columns = Math.ceil(width / cellSize);
     this.rows = Math.ceil(height / cellSize);
     this.cells = new Map();
+    this.locations = new WeakMap();
   }
 
   key(x, y) {
@@ -20,10 +21,26 @@ export class SpatialGrid {
     const key = this.key(x, y);
     if (!this.cells.has(key)) this.cells.set(key, []);
     this.cells.get(key).push(entity);
+    this.locations.set(entity, key);
+  }
+
+  update(entity) {
+    const x = Math.min(this.columns - 1, Math.floor(entity.x / this.cellSize));
+    const y = Math.min(this.rows - 1, Math.floor(entity.y / this.cellSize));
+    const key = this.key(x, y), previous = this.locations.get(entity);
+    if (previous === key) return;
+    const cell = this.cells.get(previous);
+    if (cell) {
+      const index = cell.indexOf(entity);
+      if (index !== -1) cell.splice(index, 1);
+      if (!cell.length) this.cells.delete(previous);
+    }
+    this.insert(entity);
   }
 
   load(items) {
     this.cells.clear();
+    this.locations = new WeakMap();
     for (const item of items) this.insert(item);
     return this;
   }

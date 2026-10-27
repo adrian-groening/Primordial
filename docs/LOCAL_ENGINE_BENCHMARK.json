@@ -1,0 +1,53 @@
+{
+  "node": "v23.11.0",
+  "cpu": "Apple M3 Pro",
+  "platform": "darwin",
+  "arch": "x64",
+  "neural": {
+    "count": 1,
+    "depth": 1,
+    "width": 6
+  },
+  "note": "Short headless CPU throughput measurement. Not a long-run stability or browser FPS guarantee.",
+  "scenarios": [
+    {
+      "initialPopulation": 84,
+      "initialFood": 480,
+      "ticks": 300,
+      "initializationMs": 20.12975,
+      "elapsedMs": 194.330583,
+      "ticksPerSecond": 1543.7611279126354,
+      "medianTickMs": 0.369624999999985,
+      "p95TickMs": 1.9897080000000074,
+      "heapUsedBytes": 8311584,
+      "energyResidual": -8.571987564209849e-10,
+      "technicalLimit": null
+    },
+    {
+      "initialPopulation": 2100,
+      "initialFood": 12000,
+      "ticks": 120,
+      "initializationMs": 62.58708399999995,
+      "elapsedMs": 1687.0813750000002,
+      "ticksPerSecond": 71.12875631147311,
+      "medianTickMs": 11.298791000000051,
+      "p95TickMs": 29.28054199999997,
+      "heapUsedBytes": 43750848,
+      "energyResidual": -5.378024070523679e-8,
+      "technicalLimit": null
+    },
+    {
+      "initialPopulation": 10500,
+      "initialFood": 60000,
+      "ticks": 60,
+      "initializationMs": 237.1075420000002,
+      "elapsedMs": 5270.57625,
+      "ticksPerSecond": 11.383954458490189,
+      "medianTickMs": 75.95341699999972,
+      "p95TickMs": 131.44583299999977,
+      "heapUsedBytes": 209416536,
+      "energyResidual": -9.771611075848341e-9,
+      "technicalLimit": null
+    }
+  ]
+}

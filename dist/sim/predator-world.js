@@ -45,15 +45,15 @@ export class TechnicalLimit extends Error {
 export class PredatorWorld {
   constructor(seed = 90210, neural = DEFAULT_NEURAL, predators = 8, options = {}) {
     validateSeed(seed);
-    numberInRange(predators, "predators", 0, 30, true);
+    numberInRange(predators, "predators", 0, 100000, true);
     if (!options || typeof options !== "object" || Array.isArray(options)) throw new TypeError("options must be an object");
     for (const key of Object.keys(options))
       if (!["width", "height", "prey", "food", "boundary", "fovDegrees", "budgets", "obstacles"].includes(key))
         throw new TypeError(`Unknown world option: ${key}`);
-    const width = numberInRange(options.width ?? 1000, "width", 250, 4000, true);
-    const height = numberInRange(options.height ?? 700, "height", 250, 4000, true);
-    const prey = numberInRange(options.prey ?? 80, "prey", 0, 350, true);
-    const food = numberInRange(options.food ?? 230, "food", 0, 650, true);
+    const width = numberInRange(options.width ?? 1000, "width", 250, 100000, true);
+    const height = numberInRange(options.height ?? 2000, "height", 250, 100000, true);
+    const prey = numberInRange(options.prey ?? 80, "prey", 0, 100000, true);
+    const food = numberInRange(options.food ?? 230, "food", 0, 100000, true);
     const boundary = options.boundary ?? "reflect";
     const fovDegrees = numberInRange(options.fovDegrees ?? 360, "fovDegrees", 30, 360);
     if (!["reflect", "periodic"].includes(boundary)) throw new RangeError("Unknown boundary mode");
@@ -124,13 +124,14 @@ export class PredatorWorld {
     this.crowdedBirths = 0;
     this.collisions = 0;
     this.limitReached = false;
-    this.ledger = { initial: 0, input: 0, heat: 0, costs: {} };
+    this.ledger = { initial: 0, input: 0, output: 0, heat: 0, costs: {} };
     for (let i = 0; i < prey; i++) this.organisms.push(this.create("prey"));
     // Seed food before predators so predator-count comparisons share initial resources.
     for (let i = 0; i < food; i++) this.addFood(false);
     for (let i = 0; i < predators; i++)
       this.organisms.push(this.create("predator"));
     this.ledger.initial = this.storedEnergy();
+    this._founderGrid = null;
     this.sample();
   }
   get renewal() {
@@ -173,8 +174,9 @@ export class PredatorWorld {
     let x = parent ? parent.x : r() * this.width;
     let y = parent ? parent.y : r() * this.height;
     if (!parent) {
+      this._founderGrid ??= this.bodyGrid();
       const radius = hunter ? 10 * 1.7 : 7 * 1.45;
-      const clear = () => hasBodySpace({ x, y }, radius, this.organisms, this.obstacles,
+      const clear = () => hasBodySpace({ x, y }, radius, this._founderGrid, this.obstacles,
         this.width, this.height, this.boundary === "periodic");
       let attempts = 0;
       while (!clear() && attempts++ < 1000) { x = r() * this.width; y = r() * this.height; }
@@ -190,7 +192,7 @@ export class PredatorWorld {
       ? clamp(parent.pattern + (appearance(4) < this.mutation / 100
         ? (appearance(5) - 0.5) * 0.7 : 0), 0, 1)
       : appearance(6);
-    return {
+    const organism = {
       id,
       role,
       parentId: parent?.id ?? null,
@@ -245,6 +247,8 @@ export class PredatorWorld {
       dead: false,
       lastAttackTick: -100,
     };
+    if (!parent) this._founderGrid.insert(organism);
+    return organism;
   }
   addFood(external = true) {
     if (this.food.length >= this.budgets.food) throw new TechnicalLimit("food", this.budgets.food);
@@ -310,6 +314,12 @@ export class PredatorWorld {
     this.spatial = new SpatialGrid(this.width, this.height, 64, this.boundary === "periodic")
       .load([...this.organisms.filter((o) => !o.dead), ...this.food, ...this.carcasses]);
   }
+  bodyGrid() {
+    const grid = new SpatialGrid(this.width, this.height, 64, this.boundary === "periodic")
+      .load(this.organisms.filter((o) => !o.dead));
+    grid.maxBodyRadius = this.organisms.reduce((max, o) => Math.max(max, bodyRadius(o)), 17);
+    return grid;
+  }
   localCandidates(o, radius, predicate) {
     const candidates = this.spatial
       ? this.spatial.query(o.x, o.y, radius)
@@ -336,6 +346,7 @@ export class PredatorWorld {
       if (item.dead || item.energy <= 0) return false;
       const { dx, dy, squared } = displacement(o, item, this.width, this.height, this.boundary === "periodic");
       if (squared > o.sense ** 2) return false;
+      if (!this.canDetect(o, item, squared)) return false;
       if (this.obstacles.length && firstObstacleHit(o,
           { x: o.x + dx, y: o.y + dy }, this.obstacles,
           this.width, this.height, this.boundary === "periodic") !== null) return false;
@@ -618,6 +629,8 @@ export class PredatorWorld {
   }
   reproduce() {
     const children = [];
+    const occupied = this.bodyGrid();
+    const living = this.organisms.reduce((n, o) => n + !o.dead, 0);
     for (const o of this.organisms) {
       if (
         o.dead ||
@@ -627,10 +640,10 @@ export class PredatorWorld {
         || (o.control[4] ?? 1) <= 0
       )
         continue;
-      if (this.organisms.filter((x) => !x.dead).length + children.length >= this.budgets.organisms)
+      if (living + children.length >= this.budgets.organisms)
         throw new TechnicalLimit("organisms", this.budgets.organisms);
       const childRadius = o.role === "predator" ? 10 * 1.7 : 7 * 1.45;
-      const position = freeBirthPosition(o, childRadius, this.organisms.concat(children),
+      const position = freeBirthPosition(o, childRadius, occupied,
         this.obstacles, this.width, this.height, this.boundary === "periodic");
       if (!position) { this.crowdedBirths++; o.action = "waiting for space"; continue; }
       o.energy -= 90;
@@ -641,6 +654,7 @@ export class PredatorWorld {
       child.x = position.x;
       child.y = position.y;
       children.push(child);
+      occupied.insert(child);
       o.nextBirthTick = this.tick + 150;
       this.births++;
     }
@@ -648,6 +662,7 @@ export class PredatorWorld {
   }
   _stepTick() {
     this._inTick = true;
+    this._founderGrid = null;
     this.tick++;
     this.time = this.tick * TICK_SECONDS;
     this.applyCommands();
@@ -674,12 +689,14 @@ export class PredatorWorld {
       Math.imul((o.id ^ Math.imul(this.tick, 2654435761)) >>> 0, 2246822519) >>> 0;
     const movers = this.organisms.filter((o) => !o.dead)
       .sort((a, b) => priority(a) - priority(b) || a.id - b.id);
+    const occupied = this.bodyGrid();
     for (const o of movers) {
       if (o.dead) continue;
       const throttle = (o.control[1] + 1) / 2;
       o.angle += o.control[0] * 3 * TICK_SECONDS;
-      const desiredX = Math.cos(o.angle) * o.speed * throttle;
-      const desiredY = Math.sin(o.angle) * o.speed * throttle;
+      const movementSpeed = this.movementSpeed(o);
+      const desiredX = Math.cos(o.angle) * movementSpeed * throttle;
+      const desiredY = Math.sin(o.angle) * movementSpeed * throttle;
       const deltaX = desiredX - o.vx, deltaY = desiredY - o.vy;
       const delta = Math.hypot(deltaX, deltaY);
       const acceleration = 180 * TICK_SECONDS;
@@ -690,7 +707,7 @@ export class PredatorWorld {
       let nextY = o.y + o.vy * TICK_SECONDS;
       const obstacleHit = firstObstacleHit(o, { x: nextX, y: nextY },
         this.obstacles, this.width, this.height, this.boundary === "periodic", bodyRadius(o));
-      const bodyHit = firstBodyHit(o, { x: nextX, y: nextY }, o, this.organisms,
+      const bodyHit = firstBodyHit(o, { x: nextX, y: nextY }, o, occupied,
         this.width, this.height, this.boundary === "periodic");
       const firstHit = Math.min(obstacleHit ?? 1, bodyHit?.fraction ?? 1);
       if (firstHit < 1) {
@@ -711,6 +728,7 @@ export class PredatorWorld {
         if (o.y !== nextY) o.vy *= -1;
         if (o.x !== nextX || o.y !== nextY) o.angle += Math.PI;
       }
+      occupied.update(o);
       this.spend(o, TICK_SECONDS * (0.7 + o.size * 0.07), "basal");
       this.spend(o, TICK_SECONDS * Math.hypot(o.vx, o.vy) * 0.022, "locomotion");
       this.spend(o, TICK_SECONDS * o.sense * 0.004, "sensing");
@@ -727,6 +745,7 @@ export class PredatorWorld {
     if (this.tick % 30 === 0) this.sample();
     this._inTick = false;
     this.spatial = null;
+    this._founderGrid = null;
     return { tick: this.tick, population: this.organisms.length, births: this.births, deaths: { ...this.deaths } };
   }
   needsTickCheckpoint() {
@@ -749,7 +768,7 @@ export class PredatorWorld {
     if (this.limitDiagnostic) return null;
     if (!this.needsTickCheckpoint()) return this._stepTick();
     const state = this.exportState();
-    const staged = PredatorWorld.restore(state);
+    const staged = this.constructor.restore(state);
     try {
       const summary = staged._stepTick();
       Object.assign(this, staged);
@@ -767,6 +786,8 @@ export class PredatorWorld {
     for (let i = 0; i < ticks && !this.limitDiagnostic; i++) this.stepTick();
     this.accumulator = this.clock.remainder * TICK_SECONDS;
   }
+  movementSpeed(o) { return o.speed; }
+  canDetect() { return true; }
   raiseBudget(store, value) {
     if (!Object.hasOwn(this.budgets, store)) throw new RangeError("Unknown budget store");
     numberInRange(value, `budget.${store}`, this.budgets[store] + 1, 100000, true);
@@ -774,9 +795,175 @@ export class PredatorWorld {
     this.limitDiagnostic = null;
     this.limitReached = false;
   }
+  applyLiveSettings(settings = {}) {
+    if (!settings || typeof settings !== "object" || Array.isArray(settings) ||
+        Object.keys(settings).some((key) => ![
+          "width", "height", "boundary", "fovDegrees", "prey", "predators", "food", "budgets", "neural",
+        ].includes(key))) throw new TypeError("Invalid live world setting");
+    // Editing is rare, so stage the whole intervention. A crowded resize or
+    // impossible introduction leaves the ongoing run exactly as it was.
+    const staged = this.constructor.restore(this.exportState());
+    const result = staged._applyLiveSettings(settings);
+    staged.limitDiagnostic = this.limitDiagnostic;
+    staged.limitReached = this.limitReached;
+    if (this.limitDiagnostic && staged.budgets[this.limitDiagnostic.store] > this.limitDiagnostic.budget) {
+      staged.limitDiagnostic = null;
+      staged.limitReached = false;
+    }
+    Object.assign(this, staged);
+    return result;
+  }
+  _applyLiveSettings(settings) {
+    const width = numberInRange(settings.width ?? this.width, "width", 250, 100000, true);
+    const height = numberInRange(settings.height ?? this.height, "height", 250, 100000, true);
+    const boundary = settings.boundary ?? this.boundary;
+    if (!["reflect", "periodic"].includes(boundary)) throw new RangeError("Unknown boundary mode");
+    const fovDegrees = numberInRange(settings.fovDegrees ?? this.fovDegrees, "fovDegrees", 30, 360);
+    const budgets = { ...this.budgets, ...settings.budgets };
+    if (settings.budgets && (typeof settings.budgets !== "object" || Array.isArray(settings.budgets) ||
+        Object.keys(settings.budgets).some((key) => !Object.hasOwn(this.budgets, key))))
+      throw new TypeError("Invalid technical budgets");
+    for (const [key, value] of Object.entries(budgets))
+      numberInRange(value, `budget.${key}`, 1, 100000, true);
+    const currentPrey = this.organisms.filter((o) => o.role === "prey").length;
+    const currentPredators = this.organisms.length - currentPrey;
+    const prey = settings.prey === undefined ? currentPrey :
+      numberInRange(settings.prey, "prey", 0, 100000, true);
+    const predators = settings.predators === undefined ? currentPredators :
+      numberInRange(settings.predators, "predators", 0, 100000, true);
+    const populationChanged = prey !== currentPrey || predators !== currentPredators;
+    const food = settings.food === undefined ? this.food.length :
+      numberInRange(settings.food, "food", 0, 100000, true);
+    const neural = Object.freeze(validateNeuralConfig(settings.neural ?? this.neural));
+    if (prey + predators > budgets.organisms || food > budgets.food ||
+        this.carcasses.length > budgets.carcasses)
+      throw new RangeError("Requested counts exceed technical budgets");
+    for (const obstacle of this.obstacles)
+      if (obstacle.x >= width || obstacle.y >= height ||
+          (boundary === "reflect" && (obstacle.x - obstacle.radius < 0 ||
+            obstacle.y - obstacle.radius < 0 || obstacle.x + obstacle.radius > width ||
+            obstacle.y + obstacle.radius > height)))
+        throw new RangeError("World would cut through an obstacle");
+
+    const oldWidth = this.width, oldHeight = this.height, oldBoundary = this.boundary;
+    this.width = width;
+    this.height = height;
+    this.boundary = boundary;
+    this.fovDegrees = fovDegrees;
+    this.budgets = budgets;
+    let added = 0, removed = 0;
+    for (const [role, target] of [["prey", prey], ["predator", predators]]) {
+      const current = this.organisms.filter((o) => o.role === role);
+      const excess = current.length - target;
+      if (excess > 0) {
+        const removedIds = new Set(current.sort((a, b) => b.id - a.id).slice(0, excess).map((o) => o.id));
+        for (const organism of this.organisms) if (removedIds.has(organism.id)) {
+          this.ledger.output = (this.ledger.output ?? 0) +
+            organism.energy + organism.gutEnergy + organism.tissueEnergy;
+          this.recentDeaths.push({ id: organism.id, role: organism.role, age: organism.age,
+            cause: "a live setting", tick: this.tick, generation: organism.generation });
+          removed++;
+        }
+        this.organisms = this.organisms.filter((o) => !removedIds.has(o.id));
+        if (this.recentDeaths.length > 50) this.recentDeaths.splice(0, this.recentDeaths.length - 50);
+      }
+    }
+    const reflow = width < oldWidth || height < oldHeight || boundary !== oldBoundary;
+    if (reflow) {
+      const placed = [];
+      for (const organism of [...this.organisms].sort((a, b) => a.id - b.id)) {
+        const radius = bodyRadius(organism);
+        const minX = boundary === "periodic" ? 0 : radius;
+        const minY = boundary === "periodic" ? 0 : radius;
+        const maxX = boundary === "periodic" ? width - 1e-6 : width - radius;
+        const maxY = boundary === "periodic" ? height - 1e-6 : height - radius;
+        let point = {
+          x: clamp(width < oldWidth ? organism.x * width / oldWidth : organism.x, minX, maxX),
+          y: clamp(height < oldHeight ? organism.y * height / oldHeight : organism.y, minY, maxY),
+        };
+        if (!hasBodySpace(point, radius, placed, this.obstacles, width, height, boundary === "periodic")) {
+          const stride = Math.max(10, radius * 2 + 1);
+          point = null;
+          for (let y = minY; y <= maxY && !point; y += stride)
+            for (let x = minX; x <= maxX; x += stride)
+              if (hasBodySpace({ x, y }, radius, placed, this.obstacles, width, height, boundary === "periodic")) {
+                point = { x, y };
+                break;
+              }
+        }
+        if (!point) throw new RangeError("No room to keep every organism in the smaller world");
+        organism.x = point.x;
+        organism.y = point.y;
+        placed.push(organism);
+      }
+      for (const item of [...this.food, ...this.carcasses]) {
+        item.x = clamp(width < oldWidth ? item.x * width / oldWidth : item.x, 0, width - 1e-6);
+        item.y = clamp(height < oldHeight ? item.y * height / oldHeight : item.y, 0, height - 1e-6);
+      }
+    }
+
+    const oldArchitecture = `${this.neural.count}/${this.neural.depth}/${this.neural.width}`;
+    const newArchitecture = `${neural.count}/${neural.depth}/${neural.width}`;
+    if (oldArchitecture !== newArchitecture) {
+      for (const organism of this.organisms) {
+        organism.brainArchive ??= {};
+        organism.brainArchive[oldArchitecture] = structuredClone(organism.brains);
+        let brains = organism.brainArchive[newArchitecture]
+          ? structuredClone(organism.brainArchive[newArchitecture])
+          : createBrains(neural, () => this.brainRandom(), null, this.mutation);
+        if (!organism.brainArchive[newArchitecture]) {
+          const copyLayer = (oldLayer, newLayer) => {
+            if (!oldLayer || !newLayer) return;
+            for (let row = 0; row < Math.min(oldLayer.length, newLayer.length); row++) {
+              const from = oldLayer[row], to = newLayer[row];
+              for (let col = 0; col < Math.min(from.length - 1, to.length - 1); col++)
+                to[col] = from[col];
+              to[to.length - 1] = from[from.length - 1];
+            }
+          };
+          for (let network = 0; network < Math.min(organism.brains.length, brains.length); network++) {
+            for (let layer = 0; layer < Math.min(this.neural.depth, neural.depth); layer++)
+              copyLayer(organism.brains[network][layer], brains[network][layer]);
+            copyLayer(organism.brains[network][this.neural.depth], brains[network][neural.depth]);
+          }
+        }
+        organism.brains = brains;
+        organism.parameterCount = parameterCount(neural);
+        organism.lastInputs = null;
+        organism.traces = [];
+      }
+      this.neural = neural;
+      this.parameters = parameterCount(neural);
+    }
+
+    this._founderGrid = null;
+    for (const [role, target] of [["prey", prey], ["predator", predators]]) {
+      const missing = target - this.organisms.filter((o) => o.role === role).length;
+      for (let i = 0; i < missing; i++) {
+        const organism = this.create(role);
+        this.organisms.push(organism);
+        this.ledger.input += organism.energy + organism.tissueEnergy;
+        added++;
+      }
+    }
+    if (this.food.length > food) {
+      const removedFood = this.food.splice(food);
+      this.ledger.output = (this.ledger.output ?? 0) +
+        removedFood.reduce((sum, item) => sum + item.energy, 0);
+      removed += removedFood.length;
+    }
+    while (this.food.length < food) { this.addFood(); added++; }
+    if (settings.prey !== undefined) this.initialPrey = prey;
+    if (settings.predators !== undefined) this.initialPredators = predators;
+    if (settings.food !== undefined) this.initialFood = food;
+    if (populationChanged) this.sample();
+    this.spatial = null;
+    this._founderGrid = null;
+    return { tick: this.tick, width, height, added, removed };
+  }
   exportState() {
     const entries = Object.entries(this).filter(([key]) =>
-      key !== "spatial" && key !== "_inTick" && key !== "clock" && key !== "limitDiagnostic" && key !== "limitReached" && key !== "accumulator",
+      key !== "spatial" && key !== "_founderGrid" && key !== "_inTick" && key !== "clock" && key !== "limitDiagnostic" && key !== "limitReached" && key !== "accumulator",
     );
     return structuredClone({ ...Object.fromEntries(entries), clockRemainder: this.clock.remainder });
   }
@@ -805,6 +992,7 @@ export class PredatorWorld {
     for (const organism of world.organisms) organism.pattern ??= 0.5;
     world.deaths.impact ??= 0;
     world.cannibalKills ??= 0;
+    world.ledger.output ??= 0;
     world.impacts ??= 0;
     world.lastImpact ??= null;
     world.crowdedBirths ??= 0;
@@ -856,7 +1044,8 @@ export class PredatorWorld {
       this.storedEnergy() -
       this.ledger.initial -
       this.ledger.input +
-      this.ledger.heat
+      this.ledger.heat +
+      (this.ledger.output ?? 0)
     );
   }
 }

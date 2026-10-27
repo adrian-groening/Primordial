@@ -1,5 +1,8 @@
 import { clamp } from "./sphere.js";
 export const GENES = {
+  caution: { label: "Threat sensitivity", min: 0, max: 1, unit: "" },
+  curiosity: { label: "Exploration tendency", min: 0, max: 1, unit: "" },
+  sociability: { label: "Social approach", min: 0, max: 1, unit: "" },
   territory: { label: "Territorial range", min: 0, max: 1, unit: "" },
   aggression: { label: "Defensive aggression", min: 0, max: 1, unit: "" },
   diet: { label: "Predatory specialization", min: 0, max: 1, unit: "" },
@@ -17,6 +20,9 @@ export const GENES = {
 // A single homozygous ancestor: no hidden starting genetic variation.
 export function founderDNA() {
   const values = {
+    caution: 0.5,
+    curiosity: 0.42,
+    sociability: 0.28,
     territory: 0.35,
     aggression: 0.3,
     diet: 0.45,

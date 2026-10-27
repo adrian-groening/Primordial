@@ -76,6 +76,10 @@ The 2D world now updates in place on ticks that cannot reach a technical budget.
 
 When a 2D predator's reserve plus assimilable gut content falls below 35% of capacity, it can sense and attack another predator or scavenge a predator carcass. Prey is still preferred, and nearby carrion prevents an attack on another predator. The normal contact, stamina, cooldown, damage, carcass and digestion rules apply, so no energy is created. The live ecology note counts predator deaths from predation. Existing predator-v2 checkpoints restore with a zero count for this new metric. The preserved 3D planet logic is unchanged. Focused tests cover cannibal hunting and feeding, prey/carrion preference, neural intent, energy balance and checkpoint migration.
 
+## Live 2D settings — 30 September 2026
+
+World dimensions, boundary mode, field of view, organism and food targets, technical budgets and controller architecture now apply to the running 2D simulation without resetting the clock or history. The default world height is 2000 LU. Growing the world preserves organism positions and opens new space; shrinking scales positions and relocates contacts, or rejects the edit if it cannot fit. Population reductions remove newest entities and book their remaining energy as external output. Controller changes preserve overlapping weights and archive each individual's prior architecture. The separate Restart control still creates a fresh run. Tests cover continuity, safe contraction, rejected-edit rollback, external energy accounting, weight restoration and live budget recovery. The 3D planet is unchanged.
+
 ## Skyfall event — 30 September 2026
 
 The 2D page now has a Skyfall button for a seeded, localized impact. The next tick records the command, creates an expanding visual ring, counts impact deaths and leaves ordinary carcasses. Restart gives a clean run. The event uses staged tick rollback if the carcass technical budget is hit. Focused model and UI tests verify the command, casualty count, visual event record and energy balance. The 3D route is unchanged.
@@ -89,7 +93,7 @@ The 2D interface now turns an observation into a specific next action. It forks 
 - **P06 — Heritable physiology, development, and pedigree:** not started. Dependencies and acceptance gate: [implementation plan](../IMPLEMENTATION_PLAN.md).
 - **P07 — Primary production, detritus, and nutrient recycling:** not started. Dependencies and acceptance gate: [implementation plan](../IMPLEMENTATION_PLAN.md).
 - **P08 — Heterogeneous habitat and environmental change:** not started. Dependencies and acceptance gate: [implementation plan](../IMPLEMENTATION_PLAN.md).
-- **P09 — Checkpoints, replay, and local experiment records:** not started. Dependencies and acceptance gate: [implementation plan](../IMPLEMENTATION_PLAN.md).
+- **P09 — Checkpoints, replay, and local experiment records:** in progress. Local worker checkpoint/replay and streamed records are implemented; broader roadmap acceptance remains open. See [local engine documentation](LOCAL_ENGINE.md) and [implementation plan](../IMPLEMENTATION_PLAN.md).
 - **P10 — Repeated experiments and scientific diagnostics:** not started. Dependencies and acceptance gate: [implementation plan](../IMPLEMENTATION_PLAN.md).
 - **P11 — Worker execution, scaling, and interface hardening:** not started. Dependencies and acceptance gate: [implementation plan](../IMPLEMENTATION_PLAN.md).
 - **P12 — Sexual reproduction and ecological diversification:** not started. Dependencies and acceptance gate: [implementation plan](../IMPLEMENTATION_PLAN.md).
@@ -106,3 +110,19 @@ Implemented a spherical 3D viewport, two-parent mating and funded eggs, persiste
 The active planet-v2 startup now uses one common ancestor, funded asexual budding, and a mutable diet gene that determines offspring feeding roles. Separate predator founders have been removed from the active interface. Sexual reproduction remains available between compatible descendants.
 
 Planet-v3 starts two identical asexual founders in distinct lineages. It adds swept spherical body exclusion, unoccupied newborn placement, inherited territory/aggression, energy-funded defensive conflict, selected territory rings, and lineage trait comparisons. Territory is a fixed birthplace claim; rigid-body momentum and learned negotiation remain outside this increment.
+
+Planet-v4 adds per-organism fear and fatigue, urgency-based choice among feeding, rest, escape, return, and exploration, seeded bounded deviations, inherited caution/curiosity/sociability, danger memory, kin tolerance and signals, and a structured decision record for a future local dialogue layer. Neural decisions remain bounded by survival rules. This is modeled behavior, not consciousness or an implemented LLM.
+
+## Computer-side simulation foundation — 13 October 2026
+
+The default 2D page is now a control panel for a dedicated Node worker, with requested/max playback, optional sampled visualization, selected-genome inspection, server-owned Decision lab, complete disk checkpoints, crash-recovery autosaves and streamed metrics. Independent headless experiments can run on multiple CPU workers using `npm run simulate`. World dimensions/count ceilings are 100,000 subject to budgets and occupancy. Indexed collision/placement checks preserve existing physics. [LOCAL_ENGINE.md](LOCAL_ENGINE.md) documents operation and limits; [LOCAL_ENGINE_BENCHMARK.json](LOCAL_ENGINE_BENCHMARK.json) records short 2,100- and 10,500-animal neural workloads. This advances parts of P09 checkpoint/replay/records; it does not close all roadmap acceptance gates. Intelligence learning, broader ecology, within-world multicore/GPU execution and disk retention remain open.
+
+## Smooth computer-side simulation preview — 14 October 2026
+
+The browser now draws on animation frames, interpolates confirmed engine snapshots, and requests visible updates at up to 10 Hz. Preview membership is stable across population changes. Large worlds initially open at a close scale, with Close-up view/Fit world and expanded zoom range. Drawing culls objects and grid lines outside the camera. These are display changes: movement speed, neural controllers and simulation time are unchanged. Focused tests cover interpolation, seam handling, pause/restore/resize resets, camera scale and sample continuity.
+
+## Learning minds, evolving abilities, and motion atelier — 14 October 2026
+
+The active local and headless model is now `predator-v3`: compulsory neural founders, 37 observations, 14 outputs, recurrent memory, local spatial food memory, bounded outcome-driven policy updates and survival-reflex backpropagation. Starting genomes and learned brains are separate; offspring mutate the genome and learning/ability genes. Dash, shield, signal, rest and camouflage have resource costs and physical effects. The default is a 1,200 × 800 world with 80 prey, 8 predators and one two-layer width-8 network per animal. Existing predator-v2 and legacy regression models remain intact.
+
+Motion atelier records actual engine positions, streams bounded path batches, retains dead-organism trails and exports SVG/PNG. Headless runs export vector artwork too. Model state, memories, learning RNG and art paths are checkpointed. [EVOLVING_MINDS.md](EVOLVING_MINDS.md) records mechanisms, constraints and test scope; [LEARNING_BENCHMARK.json](LEARNING_BENCHMARK.json) records three seeded ecological runs. This advances parts of P05/P06/P09, without closing all roadmap acceptance gates or claiming general intelligence or reliable monotonic improvement.

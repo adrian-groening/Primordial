@@ -1,0 +1,43 @@
+{
+  "repository": "https://github.com/philshiu/Drosophila_brain_model",
+  "commit": "91bdd1e7dcf193f3e7ca5a8933497fcef63b7960",
+  "dataset": "FlyWire v630 (published Shiu et al. reference; not MaleCNS)",
+  "paper": "https://doi.org/10.1038/s41586-024-07763-9",
+  "files": [
+    {
+      "name": "2023_03_23_completeness_630_final.csv",
+      "git_blob_sha1": "be745f0ce054308df21accc5c4b3883aa38498f9",
+      "bytes": 3057611
+    },
+    {
+      "name": "2023_03_23_connectivity_630_final.parquet",
+      "git_blob_sha1": "8b4d9531bc0acbda7c2074ae577e6ac9e2fca166",
+      "bytes": 86630944
+    },
+    {
+      "name": "LICENSE",
+      "git_blob_sha1": "deca2d0f1e82e910d8248b0d27398eb9450976ee",
+      "bytes": 1085
+    },
+    {
+      "name": "Readme.md",
+      "git_blob_sha1": "2f7d66ec7fbcd849fcb4c99e2412b171d37a565f",
+      "bytes": 3617
+    },
+    {
+      "name": "environment.yml",
+      "git_blob_sha1": "27599c545d10fc702777cb372ab4333e73c225b8",
+      "bytes": 174
+    },
+    {
+      "name": "example.ipynb",
+      "git_blob_sha1": "bc479485c42c18ef50762d9ab50817bc96d65c8d",
+      "bytes": 10282
+    },
+    {
+      "name": "model.py",
+      "git_blob_sha1": "5ba7083cf55bf6092967f8d9065e86cd677efed1",
+      "bytes": 11900
+    }
+  ]
+}

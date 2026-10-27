@@ -1,0 +1,243 @@
+{
+  "modelVersion": "predator-v3",
+  "node": "v23.11.0",
+  "cpu": "Apple M3 Pro",
+  "world": {
+    "width": 1200,
+    "height": 800,
+    "prey": 80,
+    "predators": 8,
+    "food": 230
+  },
+  "neural": {
+    "count": 1,
+    "depth": 2,
+    "width": 8
+  },
+  "parametersPerAnimal": 502,
+  "note": "Three 60-second ecological runs. Reward and teacher-error changes are diagnostics, not proof of general intelligence or guaranteed survival improvement.",
+  "scenarios": [
+    {
+      "seed": 90210,
+      "elapsedMs": 1866.0889160000002,
+      "ticksPerSecond": 964.5842620716793,
+      "initial": {
+        "tick": 1,
+        "time": 0.03333333333333333,
+        "population": 88,
+        "prey": 80,
+        "predators": 8,
+        "generation": 1,
+        "food": 230,
+        "carcasses": 0,
+        "births": 0,
+        "deaths": {
+          "predation": 0,
+          "starvation": 0,
+          "age": 0,
+          "impact": 0
+        },
+        "kills": 0,
+        "energyResidual": 3.510081114654895e-12,
+        "technicalLimit": null,
+        "intelligence": {
+          "updates": 0,
+          "totalUpdates": 0,
+          "meanReward": 0,
+          "meanAutonomy": 0.32443181818181854,
+          "meanLoss": 0.949792705396307,
+          "meanPlasticity": 0.014296031146162104,
+          "dashes": 22,
+          "shields": 13,
+          "signals": 21,
+          "rests": 0,
+          "concealments": 13,
+          "variants": 0
+        }
+      },
+      "final": {
+        "tick": 1800,
+        "time": 60,
+        "population": 98,
+        "prey": 87,
+        "predators": 11,
+        "generation": 4,
+        "food": 107,
+        "carcasses": 34,
+        "births": 78,
+        "deaths": {
+          "predation": 36,
+          "starvation": 32,
+          "age": 0,
+          "impact": 0
+        },
+        "kills": 36,
+        "energyResidual": -1.206353772431612e-7,
+        "technicalLimit": null,
+        "intelligence": {
+          "updates": 21449,
+          "totalUpdates": 31024,
+          "meanReward": 0.05575191008236722,
+          "meanAutonomy": 0.6290947800127205,
+          "meanLoss": 0.13059387240037887,
+          "meanPlasticity": 0.014518005838451373,
+          "dashes": 486,
+          "shields": 576,
+          "signals": 5420,
+          "rests": 0,
+          "concealments": 101,
+          "variants": 51
+        }
+      },
+      "heapUsedBytes": 27783080
+    },
+    {
+      "seed": 90211,
+      "elapsedMs": 1638.4957910000003,
+      "ticksPerSecond": 1098.568583384295,
+      "initial": {
+        "tick": 1,
+        "time": 0.03333333333333333,
+        "population": 88,
+        "prey": 80,
+        "predators": 8,
+        "generation": 1,
+        "food": 226,
+        "carcasses": 0,
+        "births": 0,
+        "deaths": {
+          "predation": 0,
+          "starvation": 0,
+          "age": 0,
+          "impact": 0
+        },
+        "kills": 0,
+        "energyResidual": 1.8758328224066645e-12,
+        "technicalLimit": null,
+        "intelligence": {
+          "updates": 0,
+          "totalUpdates": 0,
+          "meanReward": 0,
+          "meanAutonomy": 0.32102272727272757,
+          "meanLoss": 0.9496516874912762,
+          "meanPlasticity": 0.014747688217755328,
+          "dashes": 19,
+          "shields": 23,
+          "signals": 18,
+          "rests": 0,
+          "concealments": 18,
+          "variants": 0
+        }
+      },
+      "final": {
+        "tick": 1800,
+        "time": 60,
+        "population": 95,
+        "prey": 83,
+        "predators": 12,
+        "generation": 4,
+        "food": 122,
+        "carcasses": 23,
+        "births": 74,
+        "deaths": {
+          "predation": 40,
+          "starvation": 27,
+          "age": 0,
+          "impact": 0
+        },
+        "kills": 40,
+        "energyResidual": -1.0706571629270911e-7,
+        "technicalLimit": null,
+        "intelligence": {
+          "updates": 21329,
+          "totalUpdates": 29911,
+          "meanReward": 0.04679087768230651,
+          "meanAutonomy": 0.6685277422736138,
+          "meanLoss": 0.06168223143769118,
+          "meanPlasticity": 0.015025279306676489,
+          "dashes": 456,
+          "shields": 644,
+          "signals": 5235,
+          "rests": 1,
+          "concealments": 232,
+          "variants": 42
+        }
+      },
+      "heapUsedBytes": 48013160
+    },
+    {
+      "seed": 90212,
+      "elapsedMs": 1397.2439999999997,
+      "ticksPerSecond": 1288.2502984446528,
+      "initial": {
+        "tick": 1,
+        "time": 0.03333333333333333,
+        "population": 88,
+        "prey": 80,
+        "predators": 8,
+        "generation": 1,
+        "food": 225,
+        "carcasses": 0,
+        "births": 0,
+        "deaths": {
+          "predation": 0,
+          "starvation": 0,
+          "age": 0,
+          "impact": 0
+        },
+        "kills": 0,
+        "energyResidual": -2.5579538487363607e-13,
+        "technicalLimit": null,
+        "intelligence": {
+          "updates": 0,
+          "totalUpdates": 0,
+          "meanReward": 0,
+          "meanAutonomy": 0.31420454545454574,
+          "meanLoss": 0.9500409407512097,
+          "meanPlasticity": 0.014380973575721412,
+          "dashes": 27,
+          "shields": 19,
+          "signals": 18,
+          "rests": 2,
+          "concealments": 18,
+          "variants": 0
+        }
+      },
+      "final": {
+        "tick": 1800,
+        "time": 60,
+        "population": 91,
+        "prey": 79,
+        "predators": 12,
+        "generation": 3,
+        "food": 107,
+        "carcasses": 23,
+        "births": 74,
+        "deaths": {
+          "predation": 35,
+          "starvation": 36,
+          "age": 0,
+          "impact": 0
+        },
+        "kills": 35,
+        "energyResidual": -1.2680538929998875e-7,
+        "technicalLimit": null,
+        "intelligence": {
+          "updates": 20163,
+          "totalUpdates": 30368,
+          "meanReward": 0.06586584042653004,
+          "meanAutonomy": 0.6226358974105306,
+          "meanLoss": 0.14262514024089648,
+          "meanPlasticity": 0.01476947486105267,
+          "dashes": 493,
+          "shields": 506,
+          "signals": 5388,
+          "rests": 13,
+          "concealments": 183,
+          "variants": 47
+        }
+      },
+      "heapUsedBytes": 35024552
+    }
+  ]
+}

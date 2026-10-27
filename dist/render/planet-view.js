@@ -411,7 +411,9 @@ export class PlanetView {
       );
       this.orient(model, o.n, o.heading);
       model.scale.setScalar(
-        model.userData.bodyScale * (o.age < 18 ? 0.5 + (0.5 * o.age) / 18 : 1),
+        model.userData.bodyScale *
+          (o.age < 18 ? 0.5 + (0.5 * o.age) / 18 : 1) *
+          (1 - (o.compression ?? 0)),
       );
       model.userData.cilia.forEach((filament, i) => {
         filament.rotation.z =

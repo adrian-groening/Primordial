@@ -17,8 +17,11 @@ export function drawBrain(canvas, organism, index) {
   const inputLabels = organism.inputLabels ?? INPUTS,
     outputLabels = organism.outputLabels ?? OUTPUTS;
   const layers = [inputLabels.length, ...network.map((layer) => layer.length)];
-  const left = 100 * dpr,
-    right = 75 * dpr,
+  const labelFont = (w / dpr < 500 ? 9 : 11) * dpr;
+  ctx.font = `${labelFont}px monospace`;
+  const labelWidth = (labels) => Math.max(...labels.map((label) => ctx.measureText(label)?.width ?? label.length * labelFont * 0.6));
+  const left = Math.min(w * 0.35, Math.max(100 * dpr, labelWidth(inputLabels) + 16 * dpr)),
+    right = Math.min(w * 0.25, Math.max(75 * dpr, labelWidth(outputLabels) + 16 * dpr)),
     top = 30 * dpr,
     bottom = 20 * dpr;
   const point = (l, n) => [
@@ -65,7 +68,7 @@ export function drawBrain(canvas, organism, index) {
       ctx.stroke();
       if (l === 0 || l === layers.length - 1) {
         ctx.fillStyle = "#bac2cc";
-        ctx.font = `${11 * dpr}px monospace`;
+        ctx.font = `${labelFont}px monospace`;
         ctx.textAlign = l === 0 ? "right" : "left";
         ctx.fillText(
           l === 0 ? inputLabels[n] : outputLabels[n],

@@ -9,8 +9,8 @@ const counts = (world) => ({
 /** Two futures begin from exactly the same checkpoint and RNG states. */
 export function beginFoodComparison(world, horizon = 300) {
   const state = world.exportState();
-  const current = PredatorWorld.restore(state);
-  const trial = PredatorWorld.restore(state);
+  const current = world.constructor.restore(state);
+  const trial = world.constructor.restore(state);
   const proposed = world.renewal <= 75
     ? Math.min(100, world.renewal + 20)
     : Math.max(0, world.renewal - 20);

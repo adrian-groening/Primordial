@@ -33,7 +33,7 @@ test("default founders and predator count validation", () => {
   const w = new PredatorWorld();
   assert.equal(w.organisms.filter((o) => o.role === "prey").length, 80);
   assert.equal(w.organisms.filter((o) => o.role === "predator").length, 8);
-  for (const n of [-1, 31, 0.5, NaN, Infinity, "8"])
+  for (const n of [-1, 100001, 0.5, NaN, Infinity, "8"])
     assert.throws(() => new PredatorWorld(42, undefined, n));
 });
 test("attack reach, neural intent, energy and cooldown constrain damage", () => {

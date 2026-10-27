@@ -12,6 +12,8 @@ import { habitat } from "./terrain.js";
 // Adult envelope includes the enlarged visible appendages. It stays fixed while juveniles grow.
 export const bodyRadius = (o) =>
   ((0.7 + o.traits.size * 0.095) * 3 * RADIUS) / 100;
+export const effectiveRadius = (o) =>
+  bodyRadius(o) * (1 - Math.min(0.2, Math.max(0, o.compression ?? 0)));
 export const territoryRadius = (o) =>
   bodyRadius(o) * (1.5 + o.traits.territory * 3);
 export function hasSpace(n, radius, organisms, except = null) {
@@ -19,7 +21,7 @@ export function hasSpace(n, radius, organisms, except = null) {
     (o) =>
       o.dead ||
       o.id === except ||
-      dot(n, o.n) <= Math.cos((radius + bodyRadius(o) + 0.01) / RADIUS),
+      dot(n, o.n) <= Math.cos((radius + effectiveRadius(o) + 0.01) / RADIUS),
   );
 }
 export function freePosition(center, radius, organisms, environment, swim) {
@@ -43,6 +45,8 @@ export function movementBlockers(o, candidate, organisms) {
   const direction = arc > 1e-10 ? tangent(o.n, candidate) : basis(o.n)[0];
   return organisms.filter((other) => {
     if (other.dead || other.id === o.id) return false;
+    const reach = (effectiveRadius(o) + effectiveRadius(other) + 0.01) / RADIUS;
+    if (dot(o.n, other.n) < Math.cos(arc + reach)) return false;
     const along = clamp(
       Math.atan2(dot(other.n, direction), dot(other.n, o.n)),
       0,
@@ -51,7 +55,7 @@ export function movementBlockers(o, candidate, organisms) {
     const closest = walk(o.n, direction, along * RADIUS);
     return (
       dot(closest, other.n) >
-      Math.cos((bodyRadius(o) + bodyRadius(other) + 0.01) / RADIUS)
+      Math.cos((effectiveRadius(o) + effectiveRadius(other) + 0.01) / RADIUS)
     );
   });
 }

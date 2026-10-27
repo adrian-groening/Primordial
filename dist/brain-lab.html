@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#080b0c" />
+  <link rel="icon" type="image/svg+xml" href="brain-lab-icon.svg" />
+  <title>Brain Lab — FlyWire neural experiments</title>
+  <link rel="stylesheet" href="brain-lab.css" />
+</head>
+<body>
+  <header class="masthead">
+    <a class="brand" href="./">EVOLUTION <span>SIMULATION LAB</span></a>
+    <nav aria-label="Laboratories"><a href="./">Ecosystem</a><a href="planet.html">3D planet</a><a href="brain-lab.html" aria-current="page">Brain Lab</a></nav>
+    <span class="local-label"><i></i> LOCAL COMPUTE</span>
+  </header>
+  <main>
+    <div class="intro">
+      <div><span class="eyebrow">CONNECTOME EXPERIMENT / 002</span><h1>Fly brain laboratory<span>.</span></h1><p>Stimulate a sensory pathway. Follow its activity. Disconnect the inputs and compare.</p></div>
+      <div class="dataset-label">FLYWIRE <b>v630</b><span>Simplified spiking model</span></div>
+    </div>
+    <div class="metrics" aria-label="Recorded model details">
+      <div><span>MODEL NEURONS</span><strong id="model-neurons">—</strong></div>
+      <div><span>DIRECTED CONNECTIONS</span><strong id="model-connections">—</strong></div>
+      <div><span>STIMULATED SENSORS</span><strong>21 <small>sugar sensing</small></strong></div>
+      <div><span>RECORDING</span><strong id="recording-spec">Loading…</strong></div>
+    </div>
+    <div id="page-error" class="error" role="alert" hidden></div>
+    <div class="workspace">
+      <div class="observations">
+        <section class="panel organisms-panel" id="organisms-panel" aria-labelledby="organisms-title">
+          <div class="panel-top"><div><span class="eyebrow" id="organisms-label">TWO ORGANISMS / PHYSICAL ARENA</span><h2 id="organisms-title">Bodies in a physical world.</h2></div><span class="observer-badge" id="organisms-badge">LLM OFF</span></div>
+          <div class="observer-body">
+            <p id="organisms-intro">Chemical gradients become sensory input. Recorded neural spikes drive two virtual bodies through a solid arena.</p>
+            <div id="physical-world">
+              <div id="race-scoreboard" hidden>
+                <div class="race-heading"><span class="eyebrow">FOOD RACE · LOCAL LLAMA 2</span><strong id="race-clock">60.0 s remaining</strong></div>
+                <div class="race-scores"><div class="race-a"><span>FLY A</span><strong id="race-score-a">0</strong></div><span class="race-versus">FOOD PARTICLES</span><div class="race-b"><span>FLY B</span><strong id="race-score-b">0</strong></div></div>
+                <p id="race-phase" role="status"></p>
+                <p class="fine">One point per physical collection · no respawns · symmetric arena · plans apply together. Planning pauses simulated time so serial LLM calls give neither fly a head start.</p>
+              </div>
+              <canvas id="body-world" role="img" aria-label="Physical arena with two articulated organisms, food patches, solid obstacles, movement trails and energy bars. Click a body to inspect its brain."></canvas>
+              <p class="fine" id="physical-world-info">Black grid: millimetres · green: edible food · grey: solid obstacles · coloured arrows: velocity · bars: energy. Motion is smoothed playback of completed physical steps, slower than real time.</p>
+              <details class="adapter-details"><summary>How the body is connected</summary><p class="fine">Virtual chemical/contact sensors drive the 21 sugar inputs. Two downstream pools supply motor drive. Explicit synthetic body reflexes add gradient sampling, exploration, feeding pauses, fatigue and contact escape; these are adapter rules, not behaviours learned by the fly connectome. Zero neural drive cannot propel a resting body. No LLM is involved.</p></details>
+              <div id="race-analysis" hidden>
+                <div id="race-plans" class="race-plan-grid"></div>
+                <canvas id="race-score-plot" width="700" height="140" role="img" aria-label="Measured food scores for Fly A and Fly B over simulated match time"></canvas>
+                <details class="race-history"><summary>Plans and measured results</summary><div id="race-rounds"></div></details>
+                <p class="fine">Plans and forecasts are generated statements. Food scores, distance, collisions and latency are measured. The same local model plays both flies with separate contexts. Download the control log for exact prompts/actions. One match is an exploratory comparison, not proof of general reasoning ability.</p>
+              </div>
+            </div>
+            <div id="organism-cards" class="organism-cards"></div>
+            <div class="organism-actions"><button id="start-organisms" disabled>Start two organisms ↗</button><button id="stop-organisms" class="quiet" hidden>Stop both</button><button id="toggle-communication" class="quiet" disabled>Pause messages</button></div>
+            <p id="organism-channel-status" class="mono" role="status">Choose the two-organism mode below, then start their brains.</p>
+            <div id="organism-messages" class="organism-messages" aria-label="Conversation between organisms"><p class="fine">Their conversation will appear here.</p></div>
+            <p class="fine" id="organism-language-note">Messages are generated language from the controllers, not words encoded by the fly connectome. Received messages can influence the next input decision. Inspect a brain below, or pause messages to compare with the channel closed.</p>
+          </div>
+        </section>
+        <section class="panel circuit-panel" aria-labelledby="circuit-title">
+          <div class="panel-top"><div><span class="eyebrow">01 / CIRCUIT ACTIVITY</span><h2 id="circuit-title">From input to response</h2></div><span class="recorded"><i></i> <span id="activity-kind">RECORDED SPIKES</span></span></div>
+          <div class="condition-tabs" role="group" aria-label="Recording condition">
+            <button data-condition="sugar" aria-pressed="true">Intact</button>
+            <button data-condition="sugar_disconnected" aria-pressed="false">Disconnected</button>
+            <button data-condition="baseline" aria-pressed="false">No stimulus</button>
+            <button data-condition="sugar_repeat" aria-pressed="false">Seeded repeat</button>
+          </div>
+          <p id="condition-description" class="condition-description">Loading reference activity…</p>
+          <div class="circuit-wrap"><canvas id="circuit" aria-label="Functional circuit diagram. Select a neuron with the menu below to inspect its recorded activity." role="img"></canvas><div class="canvas-caption"><span>FUNCTIONAL LAYOUT · NOT ANATOMICAL</span><span id="projection-count">—</span></div></div>
+          <div class="legend"><span><i class="sensor"></i> Sugar sensor</span><span><i class="downstream"></i> Downstream neuron</span><span><i class="positive"></i> Positive weight</span><span><i class="negative"></i> Negative weight</span></div>
+          <div class="playback"><button id="play" aria-label="Pause spike playback">Pause</button><button id="rewind" class="quiet" aria-label="Rewind spike playback">↶</button><input id="timeline" aria-label="Recorded time in milliseconds" type="range" min="0" max="200" step="0.1" value="0" /><output id="playback-time" for="timeline">0.0 / 200 ms</output><select id="playback-speed" aria-label="Playback slowdown"><option value="20">20× slower</option><option value="50" selected>50× slower</option><option value="100">100× slower</option></select></div>
+          <p class="fine playback-note">Playback shows saved neural spikes. Manual experiments and LLM control run the model; each completed run replaces this recording. Brightness fades briefly after a spike.</p>
+        </section>
+        <section class="panel control-panel" aria-labelledby="control-title">
+          <div class="panel-top"><div><span class="eyebrow" id="control-label">SENSORY / NEURAL / MOTOR</span><h2 id="control-title">Physical neural control</h2></div><span class="observer-badge control-badge" id="control-badge">NO LLM</span></div>
+          <div class="observer-body">
+            <p id="control-intro">Two intact FlyWire networks run in lockstep with the world. Each neural step receives current sensory input before the body moves.</p>
+            <form id="control-form" class="control-form">
+              <label for="control-mode">Run mode<select id="control-mode"><option value="race" selected>Food race · LLM control</option><option value="physical">Physical world · no LLM</option><option value="duo">Two organisms · communicating</option><option value="continuous">One organism · continuous</option><option value="paired">Paired experiments · bounded</option></select></label>
+              <label for="race-duration" id="race-duration-label">Match length<select id="race-duration"><option value="30">30 simulated seconds</option><option value="60" selected>60 simulated seconds</option><option value="120">120 simulated seconds</option></select></label>
+              <label for="race-horizon" id="race-horizon-label">Time per plan<select id="race-horizon"><option value="1">1 simulated second</option><option value="2" selected>2 simulated seconds</option><option value="4">4 simulated seconds</option></select></label>
+              <label id="race-swap-label" class="race-swap"><input id="race-swap" type="checkbox" /> Swap starting sides for a rematch</label>
+              <label for="control-target" id="control-target-label">Target downstream spikes / second<input id="control-target" type="number" min="0" max="100000" step="1" value="10000" required /></label>
+              <label for="control-rounds" id="control-rounds-label" hidden>Maximum rounds<select id="control-rounds"><option value="1">1 round</option><option value="2">2 rounds</option><option value="3" selected>3 rounds</option><option value="5">5 rounds</option></select></label>
+              <label for="control-interval" id="control-interval-label">Minimum time between decisions<select id="control-interval"><option value="5000" selected>5 seconds</option><option value="10000">10 seconds</option><option value="20000">20 seconds</option></select></label>
+              <label for="control-duration">Neural step / activity window<select id="control-duration"><option value="100">100 ms · fine</option><option value="200" selected>200 ms · responsive</option><option value="500">500 ms</option><option value="1000">1,000 ms</option></select></label>
+              <label for="control-seed">Fixed random seed<input id="control-seed" type="number" min="0" max="4294967295" step="1" value="90210" required /></label>
+              <div class="control-actions"><button id="start-control" type="submit" disabled>Start LLM control ↗</button><button id="stop-control" type="button" class="quiet" hidden>Stop LLM control</button></div>
+            </form>
+            <div id="control-llm-notes"><p class="fine">Continuous mode builds one network and carries its neuron state, delayed signals and random sequence forward. Activity streams in windows while Llama 2 thinks; the last input stays applied. The target is total downstream spikes per second, across the full network. Llama 2 controls the 21 sugar sensors (25–250 Hz). Simulated time runs slower than wall time on this CPU.</p>
+            <p class="fine">Two-organism mode runs two full networks independently. Llama 2 takes alternating turns to avoid overlapping local inference. The target applies separately to each brain. Both keep running during conversation, so this mode uses more CPU and memory.</p>
+            </div>
+            <p id="control-status" class="mono" role="status">Connecting to controller…</p>
+            <p id="control-error" class="error" role="alert" hidden></p>
+            <div id="control-feedback" class="control-feedback"></div>
+            <canvas id="control-trend" width="700" height="110" role="img" aria-label="Recent measured downstream activity with target line" hidden></canvas>
+            <div class="observer-log-heading"><h3>Decisions & measured outcomes</h3><button id="export-control-log" class="quiet" disabled>Download control log ↓</button></div>
+            <p class="fine" id="control-history-note">Recent physical history and neural windows are bounded. Reloading reconnects; a new session initializes new brains and bodies. Stop ends both neural processes. Full-model compute runs slower than real time.</p>
+            <div id="control-log"><p class="fine">No control session yet.</p></div>
+          </div>
+        </section>
+        <section class="panel raster-panel" aria-labelledby="raster-title">
+          <div class="panel-top"><div><span class="eyebrow">02 / SPIKE TIMING</span><h2 id="raster-title">Every mark is a spike</h2></div><span id="raster-count" class="mono">—</span></div>
+          <canvas id="raster" role="img" aria-label="Spike raster: time on the horizontal axis and displayed neurons on the vertical axis. Copper marks are stimulated sensors; mint marks are downstream neurons."></canvas>
+          <p id="raster-note" class="fine">The raster uses the same neuron subset in every condition.</p>
+        </section>
+        <section class="panel inspect-panel" aria-labelledby="inspect-title">
+          <div class="panel-top"><div><span class="eyebrow">03 / NEURON INSPECTOR</span><h2 id="inspect-title">Inspect the response</h2></div></div>
+          <label for="neuron-select">Displayed neuron <span class="fine">or click a node in the circuit</span></label><select id="neuron-select"></select>
+          <div class="neuron-readout"><div><span>NEURON ROLE</span><strong id="neuron-role">—</strong></div><div><span>INTACT SPIKES</span><strong id="neuron-intact">—</strong></div><div><span>DISCONNECTED SPIKES</span><strong id="neuron-disconnected">—</strong></div></div>
+          <p id="neuron-detail" class="fine"></p>
+        </section>
+        <section class="panel observer-panel" id="observer-panel" aria-labelledby="observer-title">
+          <div class="panel-top"><div><span class="eyebrow">04 / LANGUAGE OBSERVER</span><h2 id="observer-title">Put the response into words</h2></div><span class="observer-badge">READ ONLY</span></div>
+          <div class="observer-body">
+            <p>Your local Llama 2 model explains a summary of the completed trial and selected neuron. It reads recorded counts; playback time and pending experiment controls are excluded.</p>
+            <div class="observer-controls"><button id="explain-condition" disabled>Explain this condition ↗</button><label><input id="observer-auto" type="checkbox" /> Observe condition changes</label><button id="cancel-observation" class="quiet" hidden>Cancel commentary</button></div>
+            <p id="observer-status" class="mono" role="status">Connecting to local language model…</p>
+            <p id="observer-error" class="error" role="alert" hidden></p>
+            <div class="observer-output"><span class="eyebrow">GENERATED COMMENTARY</span><p id="observer-commentary">Select a condition, then ask the observer to explain its recorded response.</p><p id="observer-binding" class="fine"></p></div>
+            <p class="fine">The neural counters remain the evidence. Generated wording may be inaccurate. The observer has no controls over stimulation, weights, actions or reproduction; this lab has no body or energy state.</p>
+            <div class="observer-log-heading"><h3>Observation log</h3><button id="export-observer-log" class="quiet" disabled>Download log ↓</button></div>
+            <p class="fine">Each entry keeps its original recording, condition, exact model request and generated reply. The latest 8 entries are shown; the download includes up to 40.</p>
+            <div id="observer-log" aria-live="polite"><p class="fine">No observations yet.</p></div>
+          </div>
+        </section>
+      </div>
+      <aside>
+        <section class="panel experiment-panel" aria-labelledby="experiment-title">
+          <span class="eyebrow">EXPERIMENT CONTROLS</span><h2 id="experiment-title">Ask the circuit</h2>
+          <p>Stimulate the 21 identified sugar-sensing neurons, then repeat with their outgoing connections blocked.</p>
+          <form id="experiment-form">
+            <label for="stimulation">Stimulation <output id="stimulation-value">150 Hz</output></label><input id="stimulation" type="range" min="25" max="250" step="5" value="150" />
+            <label for="duration">Trial duration</label><select id="duration"><option value="100">100 ms · quick</option><option value="200" selected>200 ms · reference</option><option value="500">500 ms</option><option value="1000">1,000 ms · longer run</option></select>
+            <label for="seed">Random seed</label><input id="seed" type="number" min="0" max="4294967295" step="1" value="90210" required />
+            <button id="run-experiment" type="submit" class="primary">Run experiment <span>↗</span></button>
+          </form>
+          <button id="cancel-experiment" class="quiet" hidden>Cancel experiment</button>
+          <div class="run-status"><i id="status-indicator"></i><span id="run-status" role="status">Connecting to local model…</span></div>
+          <p id="run-error" class="error" role="alert" hidden></p>
+          <p class="fine">Four sequential trials on your computer. Longer recordings take more time. Changes apply to the next experiment.</p>
+          <a class="observer-jump" href="#observer-title">Explain with the local LLM ↓</a>
+          <a class="observer-jump" href="#control-title">Let the LLM control stimulation ↓</a>
+        </section>
+        <section class="panel comparison-panel" aria-labelledby="comparison-title">
+          <span class="eyebrow">PAIRED COMPARISON</span><h2 id="comparison-title">Does activity propagate?</h2>
+          <div class="comparison-key"><span><i class="downstream"></i> Downstream</span><span><i class="sensor"></i> Input sensors</span></div>
+          <div id="comparison-bars"></div>
+          <div class="comparison-outcome"><strong id="propagation-result">—</strong><span id="propagation-detail"></span></div>
+          <p class="fine">Counts cover the full model. Disconnecting removes sensor outputs while preserving their stimulation.</p>
+        </section>
+        <section class="panel evidence-panel" aria-labelledby="evidence-title">
+          <span class="eyebrow">RECORDING & CHECKS</span><h2 id="evidence-title">Keep the evidence</h2>
+          <ul id="checks"></ul><p id="compute-info" class="fine"></p><p id="recording-id" class="fine mono"></p>
+          <button id="export-recording" class="quiet">Download displayed recording ↓</button>
+          <p class="fine">JSON includes the circuit subset, displayed spikes, full-model counts, settings and source revision. Complete NPZ spike files stay in brain/results/.</p>
+        </section>
+      </aside>
+    </div>
+    <footer><div><strong>A wiring-based model, with explicit assumptions.</strong><p>FlyWire v630 · Shiu et al. (2024) · Brian2 leaky integrate-and-fire model. This lab is separate from the ecosystem controllers and from the male CNS dataset in your PDF. Circuit positions are schematic. A response here does not establish a behaving or conscious fly.</p></div><a href="https://doi.org/10.1038/s41586-024-07763-9" target="_blank" rel="noopener">Read the model paper ↗</a></footer>
+  </main>
+  <script type="module" src="brain-lab.js"></script>
+</body>
+</html>

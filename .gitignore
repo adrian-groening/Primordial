@@ -1,0 +1,6 @@
+.simulation-data/
+simulation-results/
+brain/.venv/
+brain/reference/
+brain/results/
+brain/__pycache__/

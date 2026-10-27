@@ -2,6 +2,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { createLocalServer } from "../scripts/local-server.mjs";
 
 test("live page wires predator controls, restart, neural inspection and empty predator state", async () => {
   const html = readFileSync(
@@ -44,14 +48,14 @@ test("live page wires predator controls, restart, neural inspection and empty pr
   for (const [id, value] of Object.entries({
     food: "60",
     mutation: "12",
-    networks: "0",
+    networks: "1",
     depth: "1",
     width: "6",
     predators: "8",
     "network-view": "0",
   }))
     elements.get(id).value = value;
-  const speeds = [1, 3, 8].map((speed) => ({
+  const speeds = [1, 3, 8, "max"].map((speed) => ({
     dataset: { speed: String(speed) },
     classList: { toggle() {} },
   }));
@@ -80,53 +84,94 @@ test("live page wires predator controls, restart, neural inspection and empty pr
   globalThis.requestAnimationFrame = (callback) => {
     frame = callback;
   };
+  const nativeFetch = globalThis.fetch;
+  const directory = await mkdtemp(join(tmpdir(), "primordial-ui-"));
+  const server = createLocalServer(nativeFetch, { dataDirectory: directory });
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const base = `http://127.0.0.1:${server.address().port}`;
+  globalThis.fetch = (url, options) => nativeFetch(new URL(url, base), options);
+  let pagehide;
+  globalThis.window = { addEventListener(type, callback) { if (type === "pagehide") pagehide = callback; } };
+  await server.simulation.request("playback", { paused: true });
+  try {
   await import("../dist/predator-app.js");
   const $ = (id) => elements.get(id);
-  assert.equal($("world").style.aspectRatio, "1000 / 700");
+  assert.equal($("world").style.aspectRatio, "1200 / 800");
   assert.equal($("predator-count").textContent, 8);
   assert.equal($("prey-count").textContent, 80);
-  $("inspect-predator").onclick();
+  await $("inspect-predator").onclick();
   assert.match($("details").innerHTML, /Predator/);
   assert.match($("details").innerHTML, /Health/);
   assert.match($("details").innerHTML, /Inherited markings/);
   assert.match($("details").innerHTML, /Inherited color/);
   for (let i = 1; i <= 90; i++) frame(i * 33.3333);
+  const elapsedBeforeArchitecture = $("time").textContent;
   $("networks").value = "1";
   $("networks").oninput();
-  assert.match($("architecture").textContent, /23 → 6 → 5/);
-  $("apply-brain").onclick();
-  $("inspect-predator").onclick();
+  assert.match($("architecture").textContent, /37 → 8 → 8 → 14/);
+  await $("apply-brain").onclick();
+  assert.equal($("time").textContent, elapsedBeforeArchitecture);
+  assert.equal($("world").style.aspectRatio, "1200 / 800");
+  await $("inspect-predator").onclick();
   for (let i = 91; i <= 120; i++) frame(i * 33.3333);
   assert.match($("brain-readings").textContent, /Attack:/);
   assert.match($("brain-caption").textContent, /Predator/);
   $("predators").value = "0";
   $("predators").oninput();
-  $("apply-predators").onclick();
+  await $("apply-predators").onclick();
   assert.equal($("predator-count").textContent, 0);
-  $("inspect-predator").onclick();
+  assert.equal($("time").textContent, elapsedBeforeArchitecture);
+  await $("inspect-predator").onclick();
   assert.match($("details").textContent, /No living predators/);
-  $("reset").onclick();
+  await $("reset").onclick();
+  await $("pause").onclick();
   assert.equal($("predator-count").textContent, 0);
   $("predators").value = "12";
-  $("apply-predators").onclick();
+  await $("apply-predators").onclick();
   assert.equal($("predator-count").textContent, 12);
+  for (let i = 121; i <= 160; i++) frame(i * 33.3333);
+  const elapsedBeforeResize = $("time").textContent;
   $("world-width").value = "800";
   $("world-height").value = "400";
-  $("apply-world").onclick();
+  await $("apply-world").onclick();
   assert.equal($("world").style.aspectRatio, "800 / 400");
-  $("pause").onclick();
+  assert.equal($("time").textContent, elapsedBeforeResize);
+  $("world-height").value = "900";
+  await $("world-height").onchange();
+  assert.equal($("world").style.aspectRatio, "800 / 900");
+  assert.equal($("time").textContent, elapsedBeforeResize);
+  if ($("pause").textContent !== "Play") await $("pause").onclick();
   assert.equal($("pause").textContent, "Play");
-  $("skyfall").onclick();
-  for (let i = 121; i <= 130; i++) frame(i * 33.3333);
+  await $("skyfall").onclick();
+  await new Promise((resolve) => setTimeout(resolve, 60));
+  await $("pause").onclick();
+  for (let i = 161; i <= 170; i++) frame(i * 33.3333);
   assert.match($("impact-status").textContent, /Skyfall at/);
-  $("networks").value = "0";
-  $("apply-brain").onclick();
-  $("compare-food").onclick();
+  $("networks").value = "1";
+  await $("apply-brain").onclick();
+  await $("compare-food").onclick();
   assert.match($("decision-progress").textContent, /Comparing futures/);
-  for (let i = 131; i <= 210; i++) frame(i * 33.3333);
+  for (let i = 171; i <= 250; i++) frame(i * 33.3333);
+  for (let attempt = 0; attempt < 100 && !$("decision-result").innerHTML; attempt++) {
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
   assert.match($("decision-result").innerHTML, /Current food/);
   assert.match($("decision-result").innerHTML, /Tested food/);
   assert.equal($("apply-trial").hidden, false);
-  $("apply-trial").onclick();
+  await $("apply-trial").onclick();
+  await new Promise((resolve) => setTimeout(resolve, 300));
   assert.equal($("food").value, "80");
+  assert.match($("engine-status").textContent, /ticks\/s/);
+  await $("save-checkpoint").onclick();
+  assert.match($("storage-status").textContent, /Saved tick/);
+  assert($("checkpoint-list").options.length);
+  await $("preview-toggle").onclick();
+  assert.match($("view-status").textContent, /Visualization off/);
+  } finally {
+    pagehide?.();
+    globalThis.fetch = nativeFetch;
+    await server.simulation.close();
+    await new Promise((resolve) => server.close(resolve));
+    await rm(directory, { recursive: true, force: true });
+  }
 });
